@@ -1,0 +1,97 @@
+version: "3.8"
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: milkbank-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: change_me_root
+      MYSQL_DATABASE: milkbank_dev
+      MYSQL_USER: milkbank
+      MYSQL_PASSWORD: milkbank_pass
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./MB_schema_v3.sql:/docker-entrypoint-initdb.d/MB_schema_v3.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - milkbank-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-pchange_me_root",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: milkbank-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: milkbank_dev
+      DB_USER: milkbank
+      DB_PASSWORD: milkbank_pass
+      PORT: 5000
+      JWT_SECRET: dev_jwt_secret
+      JWT_REFRESH_SECRET: dev_refresh_secret
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+      - ./backend/logs:/usr/src/app/logs
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - milkbank-network
+    command: sh -c "npm install --silent && npm run dev"
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: milkbank-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:5000/api
+      VITE_BACKEND_URL: http://localhost:5000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - milkbank-network
+    stdin_open: true
+    tty: true
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  milkbank-network:
+    driver: bridge

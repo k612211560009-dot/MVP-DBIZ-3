@@ -1,0 +1,1372 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { Header } from "../components/Header";
+import { Stepper } from "../components/Stepper";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { PhoneInput } from "../components/PhoneInput";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
+import { Checkbox } from "../components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { toast } from "sonner";
+import { Toaster } from "../components/ui/sonner";
+import {
+  Heart,
+  Shield,
+  FileCheck,
+  CheckCircle,
+  Info,
+  ChevronLeft,
+  Calendar as CalendarIcon,
+  ArrowLeft,
+  Home,
+  X,
+} from "lucide-react";
+
+const STEPS = [
+  { id: 1, label: "Personal Info" },
+  { id: 2, label: "Health Screening" },
+  { id: 3, label: "Review & Submit" },
+  { id: 4, label: "Schedule Interview" },
+  { id: 5, label: "EHR & Medical Tests" },
+];
+
+const PROVINCES = [
+  "An Giang",
+  "Bà Rịa - Vũng Tàu",
+  "Bạc Liêu",
+  "Bắc Giang",
+  "Bắc Kạn",
+  "Bắc Ninh",
+  "Bến Tre",
+  "Bình Định",
+  "Bình Dương",
+  "Bình Phước",
+  "Bình Thuận",
+  "Cà Mau",
+  "Cần Thơ",
+  "Cao Bằng",
+  "Đà Nẵng",
+  "Đắk Lắk",
+  "Đắk Nông",
+  "Điện Biên",
+  "Đồng Nai",
+  "Đồng Tháp",
+  "Gia Lai",
+  "Hà Giang",
+  "Hà Nam",
+  "Hà Nội",
+  "Hà Tĩnh",
+  "Hải Dương",
+  "Hải Phòng",
+  "Hậu Giang",
+  "Hòa Bình",
+  "Hưng Yên",
+  "Khánh Hòa",
+  "Kiên Giang",
+  "Kon Tum",
+  "Lai Châu",
+  "Lâm Đồng",
+  "Lạng Sơn",
+  "Lào Cai",
+  "Long An",
+  "Nam Định",
+  "Nghệ An",
+  "Ninh Bình",
+  "Ninh Thuận",
+  "Phú Thọ",
+  "Phú Yên",
+  "Quảng Bình",
+  "Quảng Nam",
+  "Quảng Ngãi",
+  "Quảng Ninh",
+  "Quảng Trị",
+  "Sóc Trăng",
+  "Sơn La",
+  "Tây Ninh",
+  "Thái Bình",
+  "Thái Nguyên",
+  "Thanh Hóa",
+  "Thừa Thiên Huế",
+  "Tiền Giang",
+  "TP Hồ Chí Minh",
+  "Trà Vinh",
+  "Tuyên Quang",
+  "Vĩnh Long",
+  "Vĩnh Phúc",
+  "Yên Bái",
+];
+
+// 10 screening questions for donor
+const SCREENING_QUESTIONS = [
+  { id: "q1", text: "Bạn có đang cho con bú không?", required: true },
+  { id: "q2", text: "Bạn có bị bệnh truyền nhiễm không?", required: true },
+  {
+    id: "q3",
+    text: "Bạn có đang dùng thuốc kháng sinh không?",
+    required: true,
+  },
+  { id: "q4", text: "Bạn có hút thuốc hoặc uống rượu không?", required: true },
+  { id: "q5", text: "Bạn có tiền sử bệnh tim mạch không?", required: true },
+  {
+    id: "q6",
+    text: "Bạn có đang điều trị bệnh mãn tính không?",
+    required: true,
+  },
+  {
+    id: "q7",
+    text: "Bạn có xăm mình trong 12 tháng qua không?",
+    required: true,
+  },
+  {
+    id: "q8",
+    text: "Bạn có truyền máu trong 12 tháng qua không?",
+    required: true,
+  },
+  {
+    id: "q9",
+    text: "Bạn có sẵn sàng cam kết hiến sữa định kỳ không?",
+    required: true,
+  },
+  {
+    id: "q10",
+    text: "Bạn có đồng ý cho phép lưu trữ thông tin y tế không?",
+    required: true,
+  },
+];
+
+export default function RegistrationFlow() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { register, user } = useAuth();
+  const [showEHROption, setShowEHROption] = useState(false); // EHR only shows at step 4
+  const [usingEHR, setUsingEHR] = useState(false);
+  const [donorId, setDonorId] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [confirmedAppointment, setConfirmedAppointment] = useState(false);
+  const [interviewScheduled, setInterviewScheduled] = useState(false);
+  const [screeningApproved, setScreeningApproved] = useState(false);
+  const [ehrTestsExtracted, setEhrTestsExtracted] = useState(false);
+
+  // Get role from URL params - default to donor
+  const userRole = searchParams.get("role") || "donor";
+
+  const [personalInfo, setPersonalInfo] = useState({
+    fullName: "",
+    dob: "",
+    idPassport: "",
+    phone: "",
+    email: "",
+    province: "",
+    district: "",
+    ward: "",
+    address: "",
+    contactMethod: "phone",
+  });
+
+  const [healthInfo, setHealthInfo] = useState({
+    hasChronicDisease: false,
+    chronicDiseases: [],
+    medications: "",
+    allergies: "",
+    pregnancyHistory: "",
+    breastfeedingStatus: "",
+  });
+
+  const [screeningAnswers, setScreeningAnswers] = useState({});
+  const [confirmCorrect, setConfirmCorrect] = useState(false);
+  const [ehrTestResults, setEhrTestResults] = useState(null);
+  const [hasPositiveTest, setHasPositiveTest] = useState(false);
+  const [showVideoTutorial, setShowVideoTutorial] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+
+  const handlePersonalInfoChange = (field, value) => {
+    setPersonalInfo((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleUseEHR = async () => {
+    // Simulate EHR extraction with random results
+    // In production, this would call backend API
+    const mockResults = {
+      hiv: { status: "negative", date: "2025-10-15" },
+      hepatitisB: { status: "negative", date: "2025-10-15" },
+      hepatitisC: { status: "negative", date: "2025-10-15" },
+      syphilis: { status: "negative", date: "2025-10-15" },
+      tuberculosis: { status: "negative", date: "2025-10-15" },
+    };
+
+    // Randomly simulate a positive result for testing (10% chance)
+    const hasPositive = Math.random() < 0.1;
+    
+    if (hasPositive) {
+      // Pick random test to be positive
+      const tests = Object.keys(mockResults);
+      const positiveTest = tests[Math.floor(Math.random() * tests.length)];
+      mockResults[positiveTest].status = "positive";
+      setHasPositiveTest(true);
+    }
+
+    setEhrTestResults(mockResults);
+    setEhrTestsExtracted(true);
+    setUsingEHR(true);
+
+    // Show appropriate toast
+    if (hasPositive) {
+      toast.error("Phát hiện kết quả dương tính!", {
+        description: "Rất tiếc, có ít nhất một xét nghiệm dương tính. Hồ sơ không thể tiếp tục.",
+        duration: 5000,
+      });
+    } else {
+      toast.success("Đã trích xuất kết quả xét nghiệm từ EHR!", {
+        description: "Tất cả xét nghiệm bệnh truyền nhiễm đều âm tính",
+      });
+    }
+  };
+
+  const handleScreeningAnswer = (questionId, answer, comment = "") => {
+    setScreeningAnswers((prev) => ({
+      ...prev,
+      [questionId]: { answer, comment },
+    }));
+  };
+
+  const isScreeningComplete = () => {
+    return SCREENING_QUESTIONS.every((q) => screeningAnswers[q.id]?.answer);
+  };
+
+  const handleNext = () => {
+    if (currentStep < STEPS.length) {
+      // Validation for each step
+      if (currentStep === 1 && !personalInfo.fullName) {
+        toast.error("Vui lòng điền đầy đủ thông tin cá nhân");
+        return;
+      }
+      if (currentStep === 2 && !isScreeningComplete()) {
+        toast.error("Vui lòng trả lời đầy đủ 10 câu hỏi sàng lọc");
+        return;
+      }
+      if (currentStep === 3 && !confirmCorrect) {
+        toast.error("Vui lòng xác nhận thông tin là chính xác");
+        return;
+      }
+      if (currentStep === 4 && !selectedSlot) {
+        toast.error("Vui lòng chọn lịch hẹn phỏng vấn");
+        return;
+      }
+      if (currentStep === 5) {
+        if (!ehrTestsExtracted) {
+          toast.error("Vui lòng trích xuất kết quả xét nghiệm từ EHR");
+          return;
+        }
+        if (hasPositiveTest) {
+          toast.error("Không thể tiếp tục do có kết quả xét nghiệm dương tính");
+          return;
+        }
+      }
+      
+      // Submit form when moving from step 3 to 4
+      if (currentStep === 3) {
+        handleSubmitRegistration();
+      }
+      
+      // Auto-schedule interview when moving from step 4 to 5
+      if (currentStep === 4) {
+        setInterviewScheduled(true);
+        setScreeningApproved(true);
+        setShowEHROption(true);
+        toast.success("Lịch phỏng vấn đã được xác nhận! Tiến hành trích xuất EHR...");
+      }
+      
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmitRegistration = async () => {
+    // This is called when moving from step 3 to step 4
+    // Just validate and create temporary registration
+    setDonorId(`DN-${Date.now().toString().slice(-6)}`);
+    toast.success("Đăng ký được xác nhận! Vui lòng chọn lịch phỏng vấn.");
+  };
+
+  const handleFinalSubmit = async () => {
+    // This is the final submit after all steps including EHR
+    setIsSubmitting(true);
+    try {
+      const registrationData = {
+        userId: user?.user_id,
+        donorId,
+        personalInfo,
+        screeningAnswers,
+        interviewSlot: selectedSlot,
+        ehrTestResults,
+        donorStatus: "active", // Since all tests passed
+        screeningStatus: "approved",
+        directorStatus: "pending", // Waiting for director approval
+        createdAt: new Date().toISOString(),
+      };
+
+      // TODO: Submit to backend API
+      // POST /api/donors/register
+      // This will create entries in:
+      // 1. DONOR table (donor_id, home_bank_id, donor_status, screening_status, director_status)
+      // 2. EHR_DONOR table (donor_id, national_id, test results, is_clear=true)
+      // await api.post('/donors/register', registrationData);
+
+      setRegistrationComplete(true);
+      
+      toast.success("Hồ sơ donor đã được tạo thành công!", {
+        description: "Chờ Giám đốc phê duyệt hồ sơ để bắt đầu hiến sữa",
+      });
+
+      // Show video tutorial after 1 second
+      setTimeout(() => {
+        setShowVideoTutorial(true);
+      }, 1000);
+    } catch (error) {
+      toast.error("Đăng ký thất bại. Vui lòng thử lại.");
+      console.error("Registration error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSlotSelect = (date, time) => {
+    setSelectedSlot({ date, time });
+  };
+
+  const handleConfirmAppointment = async () => {
+    // TODO: Save appointment to backend
+    setConfirmedAppointment(true);
+    toast.success("Đã đặt lịch phỏng vấn thành công!");
+  };
+
+  const renderPersonalInfoForm = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-pink-500" />
+            Personal Information
+          </CardTitle>
+          <CardDescription>
+            Please provide your personal details for registration
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="fullName">Full Name *</Label>
+            <Input
+              id="fullName"
+              value={personalInfo.fullName}
+              onChange={(e) =>
+                handlePersonalInfoChange("fullName", e.target.value)
+              }
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="dob">Date of Birth *</Label>
+            <Input
+              id="dob"
+              type="date"
+              value={personalInfo.dob}
+              onChange={(e) => handlePersonalInfoChange("dob", e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="idPassport">ID/Passport Number *</Label>
+            <Input
+              id="idPassport"
+              value={personalInfo.idPassport}
+              onChange={(e) =>
+                handlePersonalInfoChange("idPassport", e.target.value)
+              }
+              placeholder="Enter your ID or passport number"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="phone">Phone Number *</Label>
+            <PhoneInput
+              value={personalInfo.phone}
+              onChange={(value) => handlePersonalInfoChange("phone", value)}
+              placeholder="Enter your phone number"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="email">Email Address *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={personalInfo.email}
+              onChange={(e) =>
+                handlePersonalInfoChange("email", e.target.value)
+              }
+              placeholder="Enter your email address"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="province">Province/City *</Label>
+            <Select
+              onValueChange={(value) =>
+                handlePersonalInfoChange("province", value)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select your province/city" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROVINCES.map((province) => (
+                  <SelectItem key={province} value={province}>
+                    {province}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="address">Full Address *</Label>
+            <Input
+              id="address"
+              value={personalInfo.address}
+              onChange={(e) =>
+                handlePersonalInfoChange("address", e.target.value)
+              }
+              placeholder="Enter your full address"
+              required
+            />
+          </div>
+
+          <div>
+            <Label>Preferred Contact Method</Label>
+            <RadioGroup
+              value={personalInfo.contactMethod}
+              onValueChange={(value) =>
+                handlePersonalInfoChange("contactMethod", value)
+              }
+              className="mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="phone" id="phone-contact" />
+                <Label htmlFor="phone-contact">Phone</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="email" id="email-contact" />
+                <Label htmlFor="email-contact">Email</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="both" id="both-contact" />
+                <Label htmlFor="both-contact">Both</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderScreeningForm = () => {
+    const answeredCount = Object.keys(screeningAnswers).filter(
+      (key) => screeningAnswers[key]?.answer
+    ).length;
+    const progress = (answeredCount / SCREENING_QUESTIONS.length) * 100;
+
+    return (
+      <div className="space-y-6">
+        {/* Progress indicator */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Tiến độ</span>
+                <span className="text-gray-500">
+                  {answeredCount}/{SCREENING_QUESTIONS.length} câu hỏi
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-pink-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Screening Questions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5 text-pink-500" />
+              Câu hỏi sàng lọc sức khỏe
+            </CardTitle>
+            <CardDescription>
+              Vui lòng trả lời đầy đủ 10 câu hỏi sau để đánh giá tình trạng sức
+              khỏe của bạn
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {SCREENING_QUESTIONS.map((question, index) => (
+              <div
+                key={question.id}
+                className="p-4 border border-gray-200 rounded-lg space-y-3"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center font-semibold text-sm">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <p className="font-medium">{question.text}</p>
+                    <RadioGroup
+                      value={screeningAnswers[question.id]?.answer || ""}
+                      onValueChange={(value) =>
+                        handleScreeningAnswer(
+                          question.id,
+                          value,
+                          screeningAnswers[question.id]?.comment
+                        )
+                      }
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id={`${question.id}-yes`} />
+                        <Label htmlFor={`${question.id}-yes`}>Có</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id={`${question.id}-no`} />
+                        <Label htmlFor={`${question.id}-no`}>Không</Label>
+                      </div>
+                    </RadioGroup>
+                    {screeningAnswers[question.id]?.answer === "yes" && (
+                      <div className="pt-2">
+                        <Label
+                          htmlFor={`${question.id}-comment`}
+                          className="text-sm text-gray-600"
+                        >
+                          Ghi chú (nếu có)
+                        </Label>
+                        <Textarea
+                          id={`${question.id}-comment`}
+                          value={screeningAnswers[question.id]?.comment || ""}
+                          onChange={(e) =>
+                            handleScreeningAnswer(
+                              question.id,
+                              "yes",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Vui lòng cung cấp thêm thông tin..."
+                          className="mt-1"
+                          rows={2}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderReviewForm = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileCheck className="h-5 w-5 text-blue-500" />
+            Xem lại thông tin
+          </CardTitle>
+          <CardDescription>
+            Vui lòng kiểm tra kỹ thông tin trước khi xác nhận đăng ký
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Personal Info Summary */}
+          <div>
+            <h3 className="font-semibold text-lg mb-3">Thông tin cá nhân</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-500">
+                  Họ và tên
+                </Label>
+                <p className="mt-1">{personalInfo.fullName}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">
+                  Ngày sinh
+                </Label>
+                <p className="mt-1">
+                  {personalInfo.dob
+                    ? new Date(personalInfo.dob).toLocaleDateString("vi-VN")
+                    : ""}
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">
+                  Số CMND/Passport
+                </Label>
+                <p className="mt-1">{personalInfo.idPassport}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">
+                  Số điện thoại
+                </Label>
+                <p className="mt-1">{personalInfo.phone}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">
+                  Email
+                </Label>
+                <p className="mt-1">{personalInfo.email}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">
+                  Tỉnh/Thành phố
+                </Label>
+                <p className="mt-1">{personalInfo.province}</p>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-sm font-medium text-gray-500">
+                  Địa chỉ
+                </Label>
+                <p className="mt-1">{personalInfo.address}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Screening Summary */}
+          <div className="pt-4 border-t">
+            <h3 className="font-semibold text-lg mb-3">
+              Kết quả sàng lọc sức khỏe
+            </h3>
+            <div className="space-y-2">
+              {SCREENING_QUESTIONS.map((question, index) => {
+                const answer = screeningAnswers[question.id];
+                return (
+                  <div
+                    key={question.id}
+                    className="flex items-start gap-3 py-2"
+                  >
+                    <span className="text-sm text-gray-500 w-6">
+                      {index + 1}.
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm">{question.text}</p>
+                      <p className="text-sm font-semibold mt-1">
+                        {answer?.answer === "yes" ? (
+                          <span className="text-orange-600">Có</span>
+                        ) : answer?.answer === "no" ? (
+                          <span className="text-green-600">Không</span>
+                        ) : (
+                          <span className="text-gray-400">Chưa trả lời</span>
+                        )}
+                      </p>
+                      {answer?.comment && (
+                        <p className="text-sm text-gray-600 mt-1 italic">
+                          Ghi chú: {answer.comment}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Confirmation Checkbox */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              id="confirm-correct"
+              checked={confirmCorrect}
+              onCheckedChange={(checked) => setConfirmCorrect(checked)}
+            />
+            <Label
+              htmlFor="confirm-correct"
+              className="font-normal cursor-pointer leading-relaxed"
+            >
+              Tôi xác nhận rằng tất cả thông tin được cung cấp là chính xác và
+              trung thực. Tôi hiểu rằng việc cung cấp thông tin sai lệch có thể
+              dẫn đến từ chối đăng ký.
+            </Label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          Sau khi xác nhận, bạn sẽ được yêu cầu đặt lịch phỏng vấn sàng lọc với nhân viên y tế.
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+
+  // Step 4: Schedule Interview Form
+  const renderScheduleInterviewForm = () => {
+    return (
+      <div className="space-y-6">
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <strong>✓ Đăng ký đã được xác nhận!</strong> Mã số donor: <strong className="text-pink-600">{donorId}</strong>
+          </AlertDescription>
+        </Alert>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-pink-500" />
+              Đặt lịch phỏng vấn sàng lọc
+            </CardTitle>
+            <CardDescription>
+              Chọn ngày và giờ phù hợp để tham gia phỏng vấn sàng lọc sức khỏe với nhân viên y tế. 
+              Sau khi phỏng vấn, nhân viên y tế sẽ phê duyệt thông tin và hệ thống sẽ trích xuất kết quả xét nghiệm từ EHR.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert className="border-blue-200 bg-blue-50">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                Sau khi đăng ký xong, hệ thống sẽ xác thực thông tin và nhân viên y tế sẽ được phân công phỏng vấn qua cuộc gọi video.
+              </AlertDescription>
+            </Alert>
+
+            {/* Time zone info */}
+            <div className="flex justify-between items-center text-sm text-gray-500 flex-wrap gap-2">
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">
+                  Buổi sáng (8AM - 12PM)
+                </Button>
+                <Button variant="outline" size="sm">
+                  Buổi chiều (1PM - 5PM)
+                </Button>
+              </div>
+              <span>Múi giờ: GMT+7 (TP.HCM)</span>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-3">
+              {Array.from({ length: 7 }).map((_, dayIndex) => {
+                const date = new Date();
+                date.setDate(date.getDate() + dayIndex + 1);
+                const times = ["9:00 AM", "10:30 AM", "2:00 PM", "3:30 PM"];
+
+                return (
+                  <div key={dayIndex} className="space-y-2">
+                    <div className="text-center py-2 bg-gray-100 rounded-t-lg">
+                      <p className="text-xs text-gray-600">
+                        {date.toLocaleDateString("vi-VN", {
+                          weekday: "short",
+                        })}
+                      </p>
+                      <p className="text-sm font-medium">
+                        {date.toLocaleDateString("vi-VN", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      {times.map((time, timeIndex) => {
+                        const isSelected =
+                          selectedSlot?.date?.getDate() === date.getDate() &&
+                          selectedSlot?.time === time;
+                        return (
+                          <button
+                            key={timeIndex}
+                            onClick={() => handleSlotSelect(date, time)}
+                            className={`w-full p-2 text-xs border rounded transition-colors ${
+                              isSelected
+                                ? "bg-pink-600 text-white border-pink-600"
+                                : "border-gray-300 hover:bg-pink-50 hover:border-pink-600"
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {selectedSlot && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <strong>Đã chọn:</strong>{" "}
+                  {selectedSlot.date.toLocaleDateString("vi-VN", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}{" "}
+                  lúc {selectedSlot.time}
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  // Step 4: EHR Tests Form
+  const renderEHRTestsForm = () => {
+    const testMapping = {
+      hiv: "HIV",
+      hepatitisB: "Viêm gan B (HBV)",
+      hepatitisC: "Viêm gan C (HCV)",
+      syphilis: "Giang mai (Syphilis)",
+      tuberculosis: "Lao (TB)",
+    };
+
+    return (
+      <div className="space-y-6">
+        <Alert className="border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <strong>Thông tin screening đã được phê duyệt!</strong> Bây giờ hệ thống sẽ trích xuất kết quả xét nghiệm bệnh truyền nhiễm từ Hồ sơ Sức khỏe Điện tử (EHR).
+          </AlertDescription>
+        </Alert>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-500" />
+              Trích xuất xét nghiệm từ EHR
+            </CardTitle>
+            <CardDescription>
+              Hệ thống sẽ tự động lấy kết quả xét nghiệm bệnh truyền nhiễm từ hồ sơ sức khỏe điện tử của bạn
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {!ehrTestsExtracted ? (
+              <div className="text-center py-8">
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-lg border-2 border-dashed border-blue-300">
+                  <Shield className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    Sẵn sàng trích xuất kết quả xét nghiệm
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Nhấn nút bên dưới để hệ thống tự động lấy kết quả xét nghiệm bệnh truyền nhiễm từ EHR
+                  </p>
+                  <Button
+                    onClick={handleUseEHR}
+                    size="lg"
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Shield className="h-5 w-5 mr-2" />
+                    Trích xuất từ EHR
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {hasPositiveTest ? (
+                  <>
+                    <Alert className="border-red-200 bg-red-50">
+                      <AlertDescription className="text-red-800">
+                        <strong>⚠️ Phát hiện kết quả dương tính!</strong>
+                        <p className="mt-2">
+                          Rất tiếc, có ít nhất một xét nghiệm bệnh truyền nhiễm có kết quả dương tính. 
+                          Theo quy định, hồ sơ đăng ký hiến sữa mẹ sẽ <strong>KHÔNG ĐƯỢC PHÊ DUYỆT</strong> và 
+                          quá trình đăng ký sẽ bị hủy ngay lập tức.
+                        </p>
+                        <p className="mt-2 text-sm">
+                          Vui lòng liên hệ với nhân viên y tế để được tư vấn và hỗ trợ thêm.
+                        </p>
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {ehrTestResults && Object.entries(ehrTestResults).map(([key, result]) => {
+                        const isPositive = result.status === "positive";
+                        return (
+                          <div
+                            key={key}
+                            className={`flex items-center justify-between p-4 rounded-lg border-2 ${
+                              isPositive
+                                ? "bg-red-50 border-red-300"
+                                : "bg-gray-50 border-gray-200"
+                            }`}
+                          >
+                            <div>
+                              <p className="font-semibold text-gray-900">{testMapping[key]}</p>
+                              <p className="text-sm text-gray-500">
+                                Ngày XN: {new Date(result.date).toLocaleDateString("vi-VN")}
+                              </p>
+                            </div>
+                            <div className={`flex items-center gap-2 ${isPositive ? "text-red-600" : "text-green-600"}`}>
+                              {isPositive ? (
+                                <>
+                                  <span className="text-2xl">⚠️</span>
+                                  <span className="font-bold">Dương tính</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-5 w-5" />
+                                  <span className="font-semibold">Âm tính</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="bg-red-100 border-2 border-red-300 rounded-lg p-6 text-center">
+                      <p className="text-red-800 font-bold text-lg mb-2">
+                        Hồ sơ không đủ điều kiện tiếp tục
+                      </p>
+                      <p className="text-red-700 text-sm">
+                        Quý bà không thể tiếp tục quá trình đăng ký hiến sữa mẹ
+                      </p>
+                      <Button
+                        onClick={() => navigate("/donor")}
+                        variant="outline"
+                        className="mt-4 border-red-600 text-red-600 hover:bg-red-50"
+                      >
+                        Quay về Dashboard
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Alert className="border-green-200 bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-800">
+                        <strong>✓ Đã trích xuất thành công!</strong> Tất cả xét nghiệm bệnh truyền nhiễm đều âm tính.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {ehrTestResults && Object.entries(ehrTestResults).map(([key, result]) => (
+                        <div
+                          key={key}
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
+                        >
+                          <div>
+                            <p className="font-semibold text-gray-900">{testMapping[key]}</p>
+                            <p className="text-sm text-gray-500">
+                              Ngày XN: {new Date(result.date).toLocaleDateString("vi-VN")}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 text-green-600">
+                            <CheckCircle className="h-5 w-5" />
+                            <span className="font-semibold">Âm tính</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Alert className="border-yellow-200 bg-yellow-50">
+                      <Info className="h-4 w-4 text-yellow-600" />
+                      <AlertDescription className="text-yellow-800">
+                        <strong>Lưu ý:</strong> Nếu có ít nhất 1 kết quả dương tính, hồ sơ sẽ KHÔNG được phê duyệt và quá trình đăng ký sẽ bị hủy ngay lập tức.
+                      </AlertDescription>
+                    </Alert>
+                  </>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderScheduleForm = () => {
+    if (!donorId) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* Success Message */}
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            <strong>Đăng ký thành công!</strong> Mã số donor:{" "}
+            <strong>{donorId}</strong>
+          </AlertDescription>
+        </Alert>
+
+        {!confirmedAppointment ? (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5 text-pink-500" />
+                  Đặt lịch phỏng vấn sàng lọc
+                </CardTitle>
+                <CardDescription>
+                  Chọn ngày và giờ phù hợp để tham gia phỏng vấn sàng lọc sức
+                  khỏe
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Time zone info */}
+                <div className="flex justify-between items-center text-sm text-gray-500">
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      Buổi sáng (8AM - 12PM)
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Buổi chiều (1PM - 5PM)
+                    </Button>
+                  </div>
+                  <span>Múi giờ: GMT+7 (TP.HCM)</span>
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-3">
+                  {Array.from({ length: 7 }).map((_, dayIndex) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() + dayIndex + 1);
+                    const times = ["9:00 AM", "10:30 AM", "2:00 PM", "3:30 PM"];
+
+                    return (
+                      <div key={dayIndex} className="space-y-2">
+                        <div className="text-center py-2 bg-gray-100 rounded-t-lg">
+                          <p className="text-xs text-gray-600">
+                            {date.toLocaleDateString("vi-VN", {
+                              weekday: "short",
+                            })}
+                          </p>
+                          <p className="text-sm font-medium">
+                            {date.toLocaleDateString("vi-VN", {
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          {times.map((time, timeIndex) => {
+                            const isSelected =
+                              selectedSlot?.date?.getDate() ===
+                                date.getDate() && selectedSlot?.time === time;
+                            return (
+                              <button
+                                key={timeIndex}
+                                onClick={() => handleSlotSelect(date, time)}
+                                className={`w-full p-2 text-xs border rounded transition-colors ${
+                                  isSelected
+                                    ? "bg-pink-600 text-white border-pink-600"
+                                    : "border-gray-300 hover:bg-pink-50 hover:border-pink-600"
+                                }`}
+                              >
+                                {time}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <Card>
+            <CardContent className="pt-8 pb-8">
+              <div className="text-center space-y-6">
+                <CheckCircle className="w-20 h-20 text-green-600 mx-auto" />
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    Đã xác nhận lịch hẹn
+                  </h2>
+                  <p className="text-gray-600">
+                    Cuộc phỏng vấn sàng lọc của bạn đã được sắp xếp vào:
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-6 rounded-lg inline-block">
+                  <p className="font-medium text-lg">
+                    {selectedSlot?.date.toLocaleDateString("vi-VN", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                  <p className="text-gray-600 mt-1">{selectedSlot?.time}</p>
+                  <p className="text-sm text-gray-500 mt-3">
+                    Qua cuộc gọi video Telehealth
+                  </p>
+                </div>
+                <div className="flex gap-4 justify-center">
+                  <Button onClick={() => navigate("/donor")}>
+                    <Home className="h-4 w-4 mr-2" />
+                    Về Dashboard
+                  </Button>
+                  <Button variant="outline">
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    Thêm vào lịch
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-blue-50">
+      <Header />
+
+      {/* Back to Home Link */}
+      <div className="container mx-auto px-4 pt-4">
+        <Link
+          to="/"
+          className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Về trang chủ
+        </Link>
+      </div>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {userRole === "donor"
+                ? "Milk Donation Registration"
+                : userRole === "medical_staff"
+                ? "Medical Staff Registration"
+                : userRole === "director"
+                ? "Director Account Registration"
+                : "System Registration"}
+            </h1>
+            <p className="text-gray-600">
+              {userRole === "donor"
+                ? "Join our community of mothers helping other mothers"
+                : userRole === "medical_staff"
+                ? "Join our medical team to save lives"
+                : userRole === "director"
+                ? "Administrative access registration"
+                : "Register for system access"}
+            </p>
+          </div>
+
+          {!registrationComplete ? (
+            <>
+              <Stepper steps={STEPS} currentStep={currentStep} />
+
+              <div className="mt-8">
+                {currentStep === 1 && renderPersonalInfoForm()}
+                {currentStep === 2 && renderScreeningForm()}
+                {currentStep === 3 && renderReviewForm()}
+                {currentStep === 4 && renderScheduleInterviewForm()}
+                {currentStep === 5 && renderEHRTestsForm()}
+              </div>
+
+              <div className="flex justify-between mt-8">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 1}
+                  className="flex items-center gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Quay lại
+                </Button>
+
+                {currentStep < 5 && !hasPositiveTest && (
+                  <Button onClick={handleNext}>
+                    {currentStep === 3 ? "Xác nhận & Tiếp tục" : "Tiếp theo"}
+                  </Button>
+                )}
+
+                {currentStep === 5 && !hasPositiveTest && (
+                  <Button
+                    onClick={handleFinalSubmit}
+                    disabled={isSubmitting || !ehrTestsExtracted}
+                  >
+                    {isSubmitting ? "Đang gửi..." : "Hoàn tất đăng ký"}
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="pt-8 pb-8">
+                <div className="text-center space-y-6">
+                  <CheckCircle className="w-20 h-20 text-green-600 mx-auto" />
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">
+                      Đăng ký hoàn tất! 🎉
+                    </h2>
+                    <p className="text-gray-600">
+                      Hồ sơ donor của bạn đã được tạo thành công với mã số:{" "}
+                      <strong className="text-pink-600">{donorId}</strong>
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 p-6 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      📋 Hồ sơ của bạn đang chờ <strong>Giám đốc Ngân hàng Sữa Mẹ</strong> phê duyệt.
+                      Sau khi được phê duyệt, bạn có thể bắt đầu ký cam kết và đặt lịch hiến sữa.
+                    </p>
+                  </div>
+                  <div className="flex gap-4 justify-center">
+                    <Button onClick={() => navigate("/donor")} size="lg">
+                      <Home className="h-5 w-5 mr-2" />
+                      Về Dashboard
+                    </Button>
+                    <Button
+                      onClick={() => setShowVideoTutorial(true)}
+                      variant="outline"
+                      size="lg"
+                    >
+                      📺 Xem video hướng dẫn
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
+
+      {/* Video Tutorial Modal */}
+      {showVideoTutorial && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Video hướng dẫn hiến sữa mẹ
+                </h3>
+                <button
+                  onClick={() => setShowVideoTutorial(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Video Player Placeholder */}
+              <div className="aspect-video bg-gray-900 rounded-lg mb-6 flex items-center justify-center">
+                <div className="text-center text-white p-8">
+                  <div className="text-6xl mb-4">🎥</div>
+                  <h4 className="text-xl font-semibold mb-2">
+                    Quy trình hiến sữa mẹ an toàn
+                  </h4>
+                  <p className="text-gray-300 mb-4">
+                    Video hướng dẫn chi tiết sẽ được hiển thị tại đây
+                  </p>
+                  <div className="inline-flex items-center gap-2 bg-white/20 px-6 py-3 rounded-full">
+                    <span className="text-4xl">▶️</span>
+                    <span>Nhấn để phát video</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Video Description */}
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-lg mb-2">
+                    Nội dung video bao gồm:
+                  </h4>
+                  <ul className="space-y-2 text-gray-700">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Chuẩn bị trước khi vắt sữa (vệ sinh, dụng cụ)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Kỹ thuật vắt sữa đúng cách và an toàn</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Bảo quản và vận chuyển sữa mẹ đạt chuẩn</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Quy trình đặt lịch và điểm hiến sữa</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span>Chương trình tích điểm và phần thưởng</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Alert className="border-pink-200 bg-pink-50">
+                  <Heart className="h-4 w-4 text-pink-600" />
+                  <AlertDescription className="text-pink-800">
+                    <strong>Cảm ơn bạn!</strong> Mỗi giọt sữa mẹ của bạn đều mang lại sự sống cho các em bé cần được chăm sóc đặc biệt.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowVideoTutorial(false)}
+                    className="flex-1"
+                  >
+                    Đóng
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/donor")}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <Home className="h-4 w-4 mr-2" />
+                    Về Dashboard
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toaster />
+    </div>
+  );
+}

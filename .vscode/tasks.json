@@ -1,0 +1,138 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🔄 Restart All Services",
+      "type": "shell",
+      "command": "taskkill /F /IM node.exe 2>nul; cd backend && docker-compose down && docker-compose up -d && cd ../frontend && npm run dev",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "default"
+      }
+    },
+    {
+      "label": "🚀 Start Frontend Only",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🏥 Start Backend Only",
+      "type": "shell",
+      "command": "npm start",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🐳 Start Database",
+      "type": "shell",
+      "command": "docker-compose up -d",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🛑 Stop All Services",
+      "type": "shell",
+      "command": "taskkill /F /IM node.exe 2>nul; cd backend && docker-compose down",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🧪 Run Backend Tests",
+      "type": "shell",
+      "command": "npm test",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🔧 Install Dependencies",
+      "type": "shell",
+      "command": "cd frontend && npm install && cd ../backend && npm install",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📊 Check System Status",
+      "type": "shell",
+      "command": "echo '=== Frontend Status ===' && curl -s http://localhost:3000 > nul && echo 'Frontend: ✅ Running' || echo 'Frontend: ❌ Not Running' && echo '=== Backend Status ===' && curl -s http://localhost:5001/api/health > nul && echo 'Backend: ✅ Running' || echo 'Backend: ❌ Not Running' && echo '=== Database Status ===' && docker ps --filter 'name=mysql' --format 'table {{.Names}}\\t{{.Status}}' | findstr mysql > nul && echo 'Database: ✅ Running' || echo 'Database: ❌ Not Running'",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🔄 Full Development Setup",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "🛑 Stop All Services",
+        "🐳 Start Database",
+        "🏥 Start Backend Only",
+        "🚀 Start Frontend Only"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false
+      }
+    }
+  ]
+}

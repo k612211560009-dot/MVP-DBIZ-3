@@ -1,0 +1,130 @@
+// ================== NHSM MVP (6 tables; adds 1–1 Visit Schedule) ==================
+
+Table USER {
+  user_id uuid [pk]
+  email varchar [not null, unique]
+  name varchar
+  phone varchar
+  national_id varchar [unique, note: 'Citizen ID']
+  role varchar [not null, note: 'donor|medical_staff|director|admin']
+  is_active boolean [not null, default: true]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table MILK_BANK {
+  bank_id uuid [pk]
+  name varchar [not null, unique]
+  province varchar
+  address varchar
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table DONOR {
+  // Shared PK = FK → 1–1 with USER
+  donor_id uuid [pk, ref: - USER.user_id, note: '1–1 with USER (shared PK)']
+  home_bank_id uuid [ref: > MILK_BANK.bank_id, note: 'current affiliation']
+
+  donor_status varchar [not null, default: 'in_progress', note: 'in_progress|active|suspended|removed|rejected|failed_positive|abandoned']
+  screening_status varchar [not null, default: 'pending', note: 'pending|approved|rejected']
+  director_status varchar [not null, default: 'pending', note: 'pending|approved|rejected']
+  consent_signed_at timestamp
+  consent_method varchar
+
+  // Weekly preference (still useful for proposals)
+  weekly_days int [note: 'bitmask 1=Mon,2=Tue,4=Wed,8=Thu,16=Fri,32=Sat,64=Sun']
+  preferred_start time
+  preferred_end time
+  max_visits_per_week int [default: 2]
+
+  points_total int [default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+}
+
+Table EHR_DONOR {
+  // 1–1 with DONOR (shared PK)
+  donor_id uuid [pk, ref: - DONOR.donor_id, note: '1–1 with DONOR (shared PK)']
+  national_id varchar [not null, note: 'copied from USER for audit']
+  source_system varchar [default: 'national_ehr']
+  last_fetched_at timestamp [not null, default: `now()`]
+
+  // Key infectious-disease results (snapshot)
+  hiv_result varchar [note: 'negative|positive|indeterminate|unknown']
+  hiv_sample_date date
+  hiv_valid_until date
+
+  hbv_result varchar
+  hbv_sample_date date
+  hbv_valid_until date
+
+  hcv_result varchar
+  hcv_sample_date date
+  hcv_valid_until date
+
+  syphilis_result varchar
+  syphilis_sample_date date
+  syphilis_valid_until date
+
+  htlv_result varchar
+  htlv_sample_date date
+  htlv_valid_until date
+
+  is_clear boolean [not null, default: false, note: 'all required tests negative & valid']
+  raw_json json
+  updated_at timestamp [not null, default: `now()`]
+}
+
+Table DONATION_VISIT {
+  visit_id uuid [pk]
+  donor_id uuid [not null, ref: > DONOR.donor_id]   // many visits per donor
+  bank_id uuid [not null, ref: > MILK_BANK.bank_id] // default = DONOR.home_bank_id on create
+  scheduled_start timestamp                          // final, actual time for the visit
+  scheduled_end timestamp
+  origin varchar [note: 'system|user|staff']
+  status varchar [not null, default: 'proposed', note: 'proposed|scheduled|confirmed|skipped|cancelled|completed']
+
+  // Health & outcome (kept on visit for MVP)
+  health_status varchar [note: 'good|bad|n/a']
+  health_note text
+  volume_ml decimal
+  container_count int
+  quality_note text
+
+  points_awarded int [default: 0]
+  recorded_by uuid [ref: > USER.user_id]
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+}
+
+// NEW: planning metadata for the visit (monthly schedule context)
+// 1–1 with DONATION_VISIT via shared PK to keep it simple
+Table VISIT_SCHEDULE {
+  visit_id uuid [pk, ref: - DONATION_VISIT.visit_id, note: '1–1 with DONATION_VISIT (shared PK)']
+
+  // Planning cycle
+  plan_month varchar [not null, note: 'YYYY-MM planning cycle']
+  plan_type varchar [not null, note: 'monthly_day|monthly_nth_weekday|ad_hoc']
+
+  // If plan_type = monthly_day
+  day_of_month int [note: '1–31; use last valid day if month shorter']
+
+  // If plan_type = monthly_nth_weekday
+  week_of_month int [note: '1–5 (1=first week)']
+  weekday int [note: '1=Mon..7=Sun']
+
+  // Proposed time window vs the final scheduled_start/end on DONATION_VISIT
+  window_start time
+  window_end time
+
+  // Audit of who/when proposed and how many times it changed
+  proposed_on timestamp [not null, default: `now()`]
+  proposed_by uuid [ref: > USER.user_id]
+  reschedule_count int [default: 0]
+
+  // Optional snapshot of the rule used to generate this proposal
+  rule_snapshot json
+
+  updated_at timestamp [not null, default: `now()`]
+}

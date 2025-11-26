@@ -1,0 +1,24 @@
+{
+  "github.copilot.agent.alias": "workspace",
+  "sqltools.connections": [
+    {
+      "mysqlOptions": {
+        "authProtocol": "default",
+        "enableSsl": "Disabled"
+      },
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 3306,
+      "driver": "MySQL",
+      "name": "MySQL Local",
+      "database": "milkbank_dev",
+      "password": "milkbank_pass",
+      "connectionTimeout": 30,
+      "username": "milkbank"
+    }
+  ]
+  // Hoặc "github.copilot.agent.alias": "local" tùy thuộc vào phiên bản hoặc yêu cầu cụ thể
+  // Giá trị "workspace" chỉ định rằng các cài đặt của Copilot Agent sẽ được lưu trữ
+  // trong cài đặt Workspace (tức là file settings.json này).
+}
