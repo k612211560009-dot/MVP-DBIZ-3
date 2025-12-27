@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DataTable } from "../../components/DataTable";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -10,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import { Eye, MessageSquare, Calendar, Filter } from "lucide-react";
-import { getSafeDonors } from "../../lib/safe-mock-data";
+import { Eye, MessageSquare, Calendar, Filter, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getDonors, type Donor } from "../../services/donorAPI";
+import { toast } from "sonner";
 
 /*
 API Endpoints:
@@ -57,32 +58,92 @@ export function DonorList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedDonor, setSelectedDonor] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [donors, setDonors] = useState<Donor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    pages: 0,
+  });
+
+  // Fetch donors from API
+  useEffect(() => {
+    fetchDonors();
+  }, [statusFilter, searchQuery, pagination.page]);
+
+  const fetchDonors = async () => {
+    try {
+      setLoading(true);
+      const response = await getDonors({
+        page: pagination.page,
+        limit: pagination.limit,
+        status: statusFilter === "all" ? undefined : statusFilter,
+        q: searchQuery || undefined,
+        sortBy: "created_at",
+        sortOrder: "desc",
+      });
+
+      setDonors(response.data.donors);
+      setPagination((prev) => ({
+        ...prev,
+        total: response.data.pagination.total,
+        pages: response.data.pagination.pages,
+      }));
+    } catch (error: any) {
+      console.error("Error fetching donors:", error);
+      toast.error("Không thể tải danh sách donor", {
+        description: error?.response?.data?.message || error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
-      pending: { variant: "secondary", label: "Chờ sàng lọc" },
-      interviewed: { variant: "default", label: "Đã phỏng vấn" },
-      needs_tests: { variant: "outline", label: "Cần xét nghiệm" },
-      approved: { variant: "default", label: "Đã duyệt" },
+      in_progress: { variant: "secondary", label: "Đang đăng ký" },
+      active: { variant: "default", label: "Đang hoạt động" },
+      suspended: { variant: "outline", label: "Tạm ngưng" },
+      removed: { variant: "destructive", label: "Đã xóa" },
       rejected: { variant: "destructive", label: "Từ chối" },
+      failed_positive: { variant: "destructive", label: "Test dương tính" },
+      abandoned: { variant: "secondary", label: "Đã bỏ" },
     };
     const config = variants[status] || { variant: "secondary", label: status };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const allDonors = getSafeDonors();
-  const filteredDonors = allDonors.filter((donor) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      donor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      donor.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      donor.phone.includes(searchQuery);
+  // Format date helper
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN");
+  };
 
-    const matchesStatus =
-      statusFilter === "all" || donor.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
+  // Transform API data to match table format
+  const tableData = donors.map((donor) => ({
+    id: donor.donor_id,
+    name: donor.ehrData?.full_name || donor.user?.email || "N/A", // Ưu tiên tên thật từ EHR
+    dob: formatDate(donor.ehrData?.date_of_birth),
+    phone: donor.ehrData?.phone || "N/A",
+    email: donor.ehrData?.email || donor.user?.email || "N/A",
+    address: donor.ehrData?.address || "N/A",
+    province: donor.ehrData?.province || "",
+    district: donor.ehrData?.district || "",
+    ward: donor.ehrData?.ward || "",
+    status: donor.donor_status,
+    isClear: donor.ehrData?.is_clear || false,
+    healthTests: {
+      hiv: donor.ehrData?.hiv_result || "unknown",
+      hbv: donor.ehrData?.hbv_result || "unknown",
+      hcv: donor.ehrData?.hcv_result || "unknown",
+      syphilis: donor.ehrData?.syphilis_result || "unknown",
+      htlv: donor.ehrData?.htlv_result || "unknown",
+    },
+    registeredAt: formatDate(donor.created_at),
+    rawData: donor, // Keep full donor data for drawer
+  }));
 
   const columns = [
     {
@@ -94,21 +155,32 @@ export function DonorList() {
       header: "Họ và tên",
     },
     {
-      key: "dob",
-      header: "Ngày sinh",
-    },
-    {
       key: "phone",
       header: "Số điện thoại",
     },
     {
-      key: "ehrId",
-      header: "EHR ID",
+      key: "dob",
+      header: "Ngày sinh",
     },
     {
       key: "status",
       header: "Trạng thái",
       render: (donor: any) => getStatusBadge(donor.status),
+    },
+    {
+      key: "isClear",
+      header: "Sàng lọc Y tế",
+      render: (donor: any) => (
+        <div className="flex items-center gap-1">
+          {donor.isClear ? (
+            <Badge variant="default" className="bg-green-600">
+              ✓ Âm tính
+            </Badge>
+          ) : (
+            <Badge variant="secondary">Chưa rõ</Badge>
+          )}
+        </div>
+      ),
     },
     {
       key: "registeredAt",
@@ -126,20 +198,23 @@ export function DonorList() {
               setSelectedDonor(donor);
               setIsDrawerOpen(true);
             }}
+            title="Xem chi tiết"
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/donors/${donor.id}`)}
+            onClick={() => navigate(`/staff/donors/${donor.id}`)}
+            title="Xem hồ sơ đầy đủ"
           >
             <MessageSquare className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/appointments")}
+            onClick={() => navigate("/staff/appointments")}
+            title="Xem lịch hẹn"
           >
             <Calendar className="h-4 w-4" />
           </Button>
@@ -155,10 +230,10 @@ export function DonorList() {
         <div>
           <h1>Danh sách Donor</h1>
           <p className="text-muted-foreground">
-            Quản lý thông tin các mẹ hiến sữa
+            Quản lý thông tin các mẹ hiến sữa ({pagination.total} donors)
           </p>
         </div>
-        <Button onClick={() => navigate("/donors/new")}>
+        <Button onClick={() => navigate("/staff/donors/new")}>
           Tạo hồ sơ thủ công
         </Button>
       </div>
@@ -167,7 +242,7 @@ export function DonorList() {
       <div className="flex gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Tìm kiếm theo ID, tên, số điện thoại..."
+            placeholder="Tìm kiếm theo email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -179,21 +254,63 @@ export function DonorList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tất cả trạng thái</SelectItem>
-            <SelectItem value="pending">Chờ sàng lọc</SelectItem>
-            <SelectItem value="interviewed">Đã phỏng vấn</SelectItem>
-            <SelectItem value="needs_tests">Cần xét nghiệm</SelectItem>
-            <SelectItem value="approved">Đã duyệt</SelectItem>
+            <SelectItem value="in_progress">Đang đăng ký</SelectItem>
+            <SelectItem value="active">Đang hoạt động</SelectItem>
+            <SelectItem value="suspended">Tạm ngưng</SelectItem>
+            <SelectItem value="removed">Đã xóa</SelectItem>
             <SelectItem value="rejected">Từ chối</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Đang tải danh sách donor...</span>
+        </div>
+      )}
+
       {/* Table */}
-      <DataTable
-        data={filteredDonors}
-        columns={columns}
-        emptyMessage="Chưa có donor nào. Tạo hồ sơ thủ công để bắt đầu."
-      />
+      {!loading && (
+        <DataTable
+          data={tableData}
+          columns={columns}
+          emptyMessage="Chưa có donor nào. Tạo hồ sơ thủ công để bắt đầu."
+        />
+      )}
+
+      {/* Pagination */}
+      {!loading && pagination.pages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Trang {pagination.page} / {pagination.pages} (Tổng{" "}
+            {pagination.total} donors)
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+              }
+              disabled={pagination.page === 1}
+            >
+              Trang trước
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+              }
+              disabled={pagination.page === pagination.pages}
+            >
+              Trang sau
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Quick View Drawer */}
       {isDrawerOpen && (
@@ -239,10 +356,12 @@ export function DonorList() {
                   <div>
                     <label className="text-sm text-gray-600">Địa chỉ</label>
                     <p className="font-medium">{selectedDonor.address}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-600">EHR ID</label>
-                    <p className="font-medium">{selectedDonor.ehrId}</p>
+                    {selectedDonor.ward && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        {selectedDonor.ward}, {selectedDonor.district},{" "}
+                        {selectedDonor.province}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Trạng thái</label>
@@ -250,6 +369,60 @@ export function DonorList() {
                       {getStatusBadge(selectedDonor.status)}
                     </div>
                   </div>
+
+                  {/* Health Screening Results */}
+                  <div className="border-t pt-4">
+                    <label className="text-sm text-gray-600 font-semibold">
+                      Kết quả sàng lọc Y tế
+                    </label>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Tình trạng chung:</span>
+                        {selectedDonor.isClear ? (
+                          <Badge variant="default" className="bg-green-600">
+                            ✓ Âm tính toàn bộ
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Chưa có kết quả</Badge>
+                        )}
+                      </div>
+                      {selectedDonor.healthTests && (
+                        <div className="grid grid-cols-2 gap-2 text-sm mt-2 p-3 bg-gray-50 rounded">
+                          <div>
+                            HIV:{" "}
+                            <Badge variant="outline" className="text-xs">
+                              {selectedDonor.healthTests.hiv}
+                            </Badge>
+                          </div>
+                          <div>
+                            HBV:{" "}
+                            <Badge variant="outline" className="text-xs">
+                              {selectedDonor.healthTests.hbv}
+                            </Badge>
+                          </div>
+                          <div>
+                            HCV:{" "}
+                            <Badge variant="outline" className="text-xs">
+                              {selectedDonor.healthTests.hcv}
+                            </Badge>
+                          </div>
+                          <div>
+                            Giang mai:{" "}
+                            <Badge variant="outline" className="text-xs">
+                              {selectedDonor.healthTests.syphilis}
+                            </Badge>
+                          </div>
+                          <div>
+                            HTLV:{" "}
+                            <Badge variant="outline" className="text-xs">
+                              {selectedDonor.healthTests.htlv}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-sm text-gray-600">
                       Ngày đăng ký
@@ -260,7 +433,7 @@ export function DonorList() {
                     <Button
                       className="flex-1"
                       onClick={() => {
-                        navigate(`/donors/${selectedDonor.id}`);
+                        navigate(`/staff/donors/${selectedDonor.id}`);
                         setIsDrawerOpen(false);
                       }}
                     >
@@ -279,26 +452,6 @@ export function DonorList() {
           </div>
         </div>
       )}
-
-      {/* Implementation Notes */}
-      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
-        <h3>Implementation Notes</h3>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground mt-2">
-          <li>
-            Implement server-side pagination with configurable page sizes
-            (10/25/50)
-          </li>
-          <li>Add debounced search (300ms) to reduce API calls</li>
-          <li>Sort by: ID, Name, Registration Date, Status (both ASC/DESC)</li>
-          <li>Bulk actions: Assign staff, Send message, Export CSV</li>
-          <li>
-            Permission: Medical Staff can only view, Director/Admin can edit
-          </li>
-          <li>
-            Keyboard navigation: Arrow keys, Enter to view, Tab to navigate
-          </li>
-        </ul>
-      </div>
     </div>
   );
 }

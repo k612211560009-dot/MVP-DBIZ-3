@@ -24,7 +24,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
     if (user?.role === "donor") {
       userDashboard = "/donor/dashboard";
-    } else if (user?.role === "medical_staff" || user?.role === "admin_staff") {
+    } else if (
+      user?.role === "staff" ||
+      user?.role === "medical_staff" ||
+      user?.role === "admin_staff"
+    ) {
       userDashboard = "/staff/dashboard";
     } else if (user?.role === "milk_bank_manager") {
       userDashboard = "/manager/dashboard";

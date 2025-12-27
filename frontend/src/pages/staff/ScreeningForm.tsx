@@ -383,27 +383,6 @@ export function ScreeningForm() {
           {isSaving ? "Đang lưu..." : "Lưu phiếu sàng lọc"}
         </Button>
       </div>
-
-      {/* Implementation Notes */}
-      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
-        <h3>Implementation Notes</h3>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground mt-2">
-          <li>
-            POST /api/admin/appointments/{"{id}"}/screening - Save screening
-            form
-          </li>
-          <li>Auto-save draft every 30 seconds to prevent data loss</li>
-          <li>Validate all required fields before submission</li>
-          <li>Store form as PDF file in document management system</li>
-          <li>Update appointment status to 'completed'</li>
-          <li>If result = 'pass', update donor status to 'needs_tests'</li>
-          <li>
-            If result = 'fail', update donor status to 'rejected' and send
-            notification
-          </li>
-          <li>Only assigned staff can fill the form (check permission)</li>
-        </ul>
-      </div>
     </div>
   );
 }

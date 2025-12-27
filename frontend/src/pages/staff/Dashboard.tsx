@@ -112,95 +112,107 @@ export function Dashboard() {
   const activeAlerts = getActiveAlerts().length;
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6 bg-gray-50 min-h-full">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white shadow-lg">
+      <div className="relative z-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white shadow-lg">
         <h1 className="text-3xl font-bold mb-2">Staff Dashboard</h1>
-        <p className="text-blue-100">
+        <p className="text-blue-50 text-base">
           Tổng quan hệ thống quản lý ngân hàng sữa mẹ
         </p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-blue-100 rounded-lg">
               <Users className="h-6 w-6 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+            <span className="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
               +12%
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">{newDonors}</h3>
-          <p className="text-sm text-gray-600">Donor mới đăng ký</p>
-          <p className="text-xs text-gray-500 mt-1">Tháng này</p>
+          <h3 className="text-3xl font-bold text-gray-900 mb-1">{newDonors}</h3>
+          <p className="text-sm font-semibold text-gray-700">
+            Donor mới đăng ký
+          </p>
+          <p className="text-xs font-medium text-gray-500 mt-1">Tháng này</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+        <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-green-100 rounded-lg">
               <TrendingUp className="h-6 w-6 text-green-600" />
             </div>
-            <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+            <span className="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
               +8%
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">
+          <h3 className="text-3xl font-bold text-gray-900 mb-1">
             {approvedDonors}
           </h3>
-          <p className="text-sm text-gray-600">Donor chính thức</p>
-          <p className="text-xs text-gray-500 mt-1">Đã được duyệt</p>
+          <p className="text-sm font-semibold text-gray-700">
+            Donor chính thức
+          </p>
+          <p className="text-xs font-medium text-gray-500 mt-1">
+            Đã được duyệt
+          </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+        <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-blue-100 rounded-lg">
               <Droplet className="h-6 w-6 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-red-600 bg-red-50 px-2 py-1 rounded">
+            <span className="text-sm font-semibold text-red-600 bg-red-100 px-3 py-1 rounded-full">
               -4%
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">
+          <h3 className="text-3xl font-bold text-gray-900 mb-1">
             {totalVolume}ml
           </h3>
-          <p className="text-sm text-gray-600">Sữa mẹ tháng này</p>
-          <p className="text-xs text-gray-500 mt-1">So với tháng trước</p>
+          <p className="text-sm font-semibold text-gray-700">
+            Sữa mẹ tháng này
+          </p>
+          <p className="text-xs font-medium text-gray-500 mt-1">
+            So với tháng trước
+          </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+        <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-purple-100 rounded-lg">
               <Calendar className="h-6 w-6 text-purple-600" />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">
+          <h3 className="text-3xl font-bold text-gray-900 mb-1">
             {todayAppointments}
           </h3>
-          <p className="text-sm text-gray-600">Lịch hẹn hôm nay</p>
-          <p className="text-xs text-gray-500 mt-1">21/10/2025</p>
+          <p className="text-sm font-semibold text-gray-700">
+            Lịch hẹn hôm nay
+          </p>
+          <p className="text-xs font-medium text-gray-500 mt-1">21/10/2025</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
+        <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 hover:shadow-xl transition-all">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-orange-100 rounded-lg">
               <Bell className="h-6 w-6 text-orange-600" />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">
+          <h3 className="text-3xl font-bold text-gray-900 mb-1">
             {activeAlerts}
           </h3>
-          <p className="text-sm text-gray-600">Cảnh báo</p>
-          <p className="text-xs text-gray-500 mt-1">Cần xử lý</p>
+          <p className="text-sm font-semibold text-gray-700">Cảnh báo</p>
+          <p className="text-xs font-medium text-gray-500 mt-1">Cần xử lý</p>
         </div>
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Volume Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Droplet className="h-5 w-5 text-blue-600" />
             Lượng sữa theo tháng
           </h3>
@@ -229,8 +241,8 @@ export function Dashboard() {
         </div>
 
         {/* Appointment Type Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Calendar className="h-5 w-5 text-blue-600" />
             Lịch hẹn theo loại
           </h3>
@@ -271,8 +283,8 @@ export function Dashboard() {
       </div>
 
       {/* Recent Activities */}
-      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="relative z-10 bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
+        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Bell className="h-5 w-5 text-blue-600" />
           Hoạt động gần đây
         </h3>
@@ -280,16 +292,20 @@ export function Dashboard() {
           {recentActivities.map((activity) => (
             <div
               key={activity.id}
-              className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+              className="flex items-center justify-between py-3 border-b border-gray-200 last:border-0"
             >
               <div className="flex items-center gap-3">
                 <div className="h-2 w-2 rounded-full bg-blue-500" />
                 <div>
-                  <p className="text-sm text-gray-900">{activity.message}</p>
-                  <p className="text-xs text-gray-500">{activity.donor}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {activity.message}
+                  </p>
+                  <p className="text-xs font-medium text-gray-600">
+                    {activity.donor}
+                  </p>
                 </div>
               </div>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
                 {activity.time}
               </span>
             </div>

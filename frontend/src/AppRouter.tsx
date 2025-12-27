@@ -125,7 +125,9 @@ export default function AppRouter() {
           <Route
             path="/staff"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffDashboard />
                 </StaffLayout>
@@ -135,7 +137,9 @@ export default function AppRouter() {
           <Route
             path="/staff/dashboard"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffDashboard />
                 </StaffLayout>
@@ -145,7 +149,9 @@ export default function AppRouter() {
           <Route
             path="/staff/donors"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffDonorList />
                 </StaffLayout>
@@ -155,7 +161,9 @@ export default function AppRouter() {
           <Route
             path="/staff/appointments"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffAppointmentList />
                 </StaffLayout>
@@ -165,7 +173,9 @@ export default function AppRouter() {
           <Route
             path="/staff/screening"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffScreeningForm />
                 </StaffLayout>
@@ -175,7 +185,9 @@ export default function AppRouter() {
           <Route
             path="/staff/donations"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffDonationLog />
                 </StaffLayout>
@@ -185,7 +197,9 @@ export default function AppRouter() {
           <Route
             path="/staff/ehr-tests"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffEHRTests />
                 </StaffLayout>
@@ -195,7 +209,9 @@ export default function AppRouter() {
           <Route
             path="/staff/payments"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffPayments />
                 </StaffLayout>
@@ -205,7 +221,9 @@ export default function AppRouter() {
           <Route
             path="/staff/alerts"
             element={
-              <ProtectedRoute allowedRoles={["medical_staff", "admin_staff"]}>
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
                 <StaffLayout>
                   <StaffAlerts />
                 </StaffLayout>

@@ -10,12 +10,12 @@ interface StaffLayoutProps {
 export function StaffLayout({ children }: StaffLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex h-screen w-full overflow-hidden bg-gray-50">
         <StaffSidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden relative">
           <Topbar />
-          <main className="flex-1 overflow-auto bg-muted/20 p-6">
-            {children}
+          <main className="flex-1 overflow-auto bg-gray-50 p-6 relative z-0">
+            <div className="relative z-10">{children}</div>
           </main>
         </div>
       </div>

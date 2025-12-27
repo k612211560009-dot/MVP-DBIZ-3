@@ -67,7 +67,7 @@ export function StaffSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+      <SidebarHeader className="border-b border-gray-200 px-6 py-4 h-[73px] flex items-center">
         <div className="flex items-center gap-2">
           <Droplet className="h-8 w-8 text-primary" />
           <div>

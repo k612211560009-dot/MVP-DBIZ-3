@@ -290,41 +290,6 @@ export function Payments() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Implementation Notes */}
-      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
-        <h3>Implementation Notes</h3>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground mt-2">
-          <li>
-            GET /api/admin/payments?status=&page=&per_page= - List payments
-          </li>
-          <li>
-            POST /api/admin/payments/{"{id}"}/mark-transferred - Mark as
-            transferred with date and receipt
-          </li>
-          <li>
-            File upload: Store receipt in secure file storage (S3, Azure Blob,
-            etc.)
-          </li>
-          <li>
-            Send email/SMS notification to donor when payment is marked as
-            transferred
-          </li>
-          <li>Payment history: Show all transfers for a specific donor</li>
-          <li>
-            Bulk operations: Mark multiple payments as transferred at once
-          </li>
-          <li>
-            Integration: Auto-generate payment requests based on accumulated
-            points
-          </li>
-          <li>
-            Permission: Only Director/Admin/Finance staff can mark payments as
-            transferred
-          </li>
-          <li>Audit trail: Log all payment status changes</li>
-        </ul>
-      </div>
     </div>
   );
 }

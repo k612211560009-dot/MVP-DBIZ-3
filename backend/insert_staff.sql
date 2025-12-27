@@ -19,7 +19,7 @@ INSERT INTO USER (
 VALUES (
     UUID(),
     'staff001@milkbank.com',
-    '$2b$10$XQz8Z3K4N6J5L7M9P2Q4R.S6T8U0V2W4X6Y8Z0A2B4C6D8E0F2G4H6',  -- Password: Staff123!@#
+    '$2a$10$G38pfkduAS9iC7Y11hkWLuoVGfR0qNGkIDG67V/Hm0WlooLJSNMme',  -- Password: Staff123!@#
     1,
     'Nguyen Van Minh',
     '0901234567',
@@ -55,7 +55,7 @@ INSERT INTO USER (
 VALUES (
     UUID(),
     'staff002@milkbank.com',
-    '$2b$10$XQz8Z3K4N6J5L7M9P2Q4R.S6T8U0V2W4X6Y8Z0A2B4C6D8E0F2G4H6',  -- Password: Staff123!@#
+    '$2a$10$G38pfkduAS9iC7Y11hkWLuoVGfR0qNGkIDG67V/Hm0WlooLJSNMme',  -- Password: Staff123!@#
     1,
     'Tran Thi Lan',
     '0912345678',

@@ -194,23 +194,6 @@ export function DonationLog() {
         columns={columns}
         emptyMessage="Không có dữ liệu hiến sữa"
       />
-
-      {/* Implementation Notes */}
-      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
-        <h3>Implementation Notes</h3>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground mt-2">
-          <li>
-            GET
-            /api/admin/donations?donor_id=&date_from=&date_to=&page=&per_page=
-          </li>
-          <li>Export CSV: Include all columns with Vietnamese headers</li>
-          <li>Allow adjusting points for specific donation (Director only)</li>
-          <li>Show donation trend chart by month/week</li>
-          <li>Filter by staff member who recorded the donation</li>
-          <li>Bulk operations: Delete, Adjust points, Export selected</li>
-          <li>Link to donor profile from donor name</li>
-        </ul>
-      </div>
     </div>
   );
 }

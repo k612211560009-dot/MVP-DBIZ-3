@@ -226,39 +226,6 @@ export function Alerts() {
         columns={columns}
         emptyMessage="Không có cảnh báo nào"
       />
-
-      {/* Implementation Notes */}
-      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
-        <h3>Implementation Notes</h3>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground mt-2">
-          <li>
-            GET /api/admin/alerts?status=&priority=&type= - List all alerts with
-            filters
-          </li>
-          <li>
-            PATCH /api/admin/alerts/{"{id}"}/resolve - Mark alert as resolved
-          </li>
-          <li>
-            POST /api/admin/alerts/{"{id}"}/send-reminder - Send SMS/email
-            reminder to donor
-          </li>
-          <li>
-            POST /api/admin/alerts/{"{id}"}/assign - Assign alert to staff
-            member
-          </li>
-          <li>
-            Automated alert creation: Check daily for expiring tests, incomplete
-            screenings
-          </li>
-          <li>
-            Real-time notifications: WebSocket for new high-priority alerts
-          </li>
-          <li>
-            Alert rules configurable by admin (thresholds, priority levels)
-          </li>
-          <li>Email digest: Daily summary of active alerts sent to Director</li>
-        </ul>
-      </div>
     </div>
   );
 }

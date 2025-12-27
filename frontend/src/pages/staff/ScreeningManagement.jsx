@@ -83,7 +83,7 @@ const ScreeningManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto px-4 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
@@ -95,7 +95,7 @@ const ScreeningManagement = () => {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 max-w-7xl mx-auto">
         <div className="card p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
@@ -154,7 +154,7 @@ const ScreeningManagement = () => {
       </div>
 
       {/* Screenings List */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden max-w-7xl mx-auto">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">Screening Queue</h3>
         </div>
@@ -163,7 +163,7 @@ const ScreeningManagement = () => {
           {screenings.length > 0 ? (
             screenings.map((screening) => (
               <div key={screening.id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
                   <div className="flex items-center space-x-4">
                     {/* Priority Indicator */}
                     <div
@@ -257,7 +257,7 @@ const ScreeningManagement = () => {
                 </div>
 
                 {/* Additional Info */}
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600">
                   <div>
                     <span className="font-medium">Last Screening:</span>{" "}
                     {screening.lastScreening

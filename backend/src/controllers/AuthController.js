@@ -145,6 +145,8 @@ class AuthController {
         attributes: [
           "user_id",
           "email",
+          "name",
+          "phone",
           "role",
           "email_verified",
           "is_active",
@@ -158,10 +160,12 @@ class AuthController {
                   model: Donor,
                   as: "donorProfile",
                   attributes: [
+                    "donor_id",
                     "donor_status",
                     "screening_status",
-                    "registration_step",
+                    "director_status",
                     "points_total",
+                    "consent_signed_at",
                   ],
                 },
               ]

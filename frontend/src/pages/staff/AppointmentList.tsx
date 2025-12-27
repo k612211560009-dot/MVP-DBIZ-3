@@ -334,32 +334,6 @@ export function AppointmentList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Implementation Notes */}
-      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
-        <h3>Implementation Notes</h3>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground mt-2">
-          <li>
-            POST /api/admin/appointments/{"{id}"}/mark_failed with reason and
-            notes
-          </li>
-          <li>
-            Send SMS notification to donor when appointment is marked as failed
-          </li>
-          <li>
-            Log all status changes with timestamp and user who made the change
-          </li>
-          <li>
-            Calendar mini view shows appointments by date (integrate with date
-            filter)
-          </li>
-          <li>
-            Medical Staff can only see appointments where staff =
-            current_user_id
-          </li>
-          <li>Director/Admin can reassign appointments to different staff</li>
-        </ul>
-      </div>
     </div>
   );
 }

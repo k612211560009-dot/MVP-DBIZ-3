@@ -136,7 +136,11 @@ class AuthService {
 
     // Determine redirect URL based on role
     let redirectUrl = "/"; // Donors go to landing page
-    if (user.role === "medical_staff" || user.role === "admin_staff") {
+    if (
+      user.role === "staff" ||
+      user.role === "medical_staff" ||
+      user.role === "admin_staff"
+    ) {
       redirectUrl = "/staff/dashboard";
     } else if (user.role === "milk_bank_manager") {
       redirectUrl = "/manager/dashboard";

@@ -96,15 +96,16 @@ class DonorRegistrationController {
         is_clear: true,
       };
 
-      // Create or update EHR record
-      // TEMPORARILY DISABLED: Database schema issue with EHR_DONOR table
-      // TODO: Fix EHR_DONOR schema - column names mismatch
-      /*
+      // Create or update EHR record with mock government data
+      // In production, this data comes from actual government EHR API
       await EhrDonor.upsert({
         donor_id: userId,
         ...mockEhrData,
       });
-      */
+
+      console.log(
+        `✅ EHR data synced for donor ${userId}: is_clear=${mockEhrData.is_clear}`
+      );
 
       return res.json({
         message: "Registration submitted successfully",

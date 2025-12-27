@@ -297,27 +297,6 @@ export function EHRTests() {
         columns={columns}
         emptyMessage="Không có kết quả xét nghiệm"
       />
-
-      {/* Implementation Notes */}
-      <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
-        <h3>Implementation Notes</h3>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground mt-2">
-          <li>
-            GET /api/admin/ehr-tests/status - Job status and next run time
-          </li>
-          <li>
-            POST /api/admin/ehr-tests/extract - Manual trigger extraction job
-          </li>
-          <li>Integration with hospital EHR system via API or file import</li>
-          <li>Automated job runs daily at 8:00 AM (configurable)</li>
-          <li>Send alerts when tests expire or are expiring soon (30 days)</li>
-          <li>Manual verification: Staff can confirm test result accuracy</li>
-          <li>Flag for follow-up: Assign to staff for further investigation</li>
-          <li>
-            Export list of donors with expired/expiring tests for scheduling
-          </li>
-        </ul>
-      </div>
     </div>
   );
 }

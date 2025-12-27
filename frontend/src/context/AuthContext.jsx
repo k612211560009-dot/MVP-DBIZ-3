@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
   // Helper function to get role-based redirect
   const getRoleBasedRedirect = (role) => {
     if (role === "donor") return "/"; // Donors go to landing page
-    if (role === "medical_staff" || role === "admin_staff")
+    if (role === "staff" || role === "medical_staff" || role === "admin_staff")
       return "/staff/dashboard";
     if (role === "milk_bank_manager") return "/manager/dashboard";
     return "/";
