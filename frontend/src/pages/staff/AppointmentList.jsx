@@ -6,6 +6,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Video,
+  ExternalLink,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { getSafeAppointments } from "../../lib/safe-mock-data";
@@ -206,6 +208,35 @@ const AppointmentList = () => {
                   <p className="text-sm text-gray-600">
                     <strong>Notes:</strong> {appointment.notes}
                   </p>
+                </div>
+              )}
+
+              {/* Meeting Link for Screening Appointments */}
+              {appointment.type === "screening" && appointment.meetingLink && (
+                <div className="mt-4 p-4 bg-pink-50 border border-pink-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Video className="h-5 w-5 text-pink-600 mr-2" />
+                      <div>
+                        <p className="text-sm font-medium text-pink-900">
+                          Video Interview Link
+                        </p>
+                        <p className="text-xs text-pink-700 mt-1">
+                          {appointment.meetingLink}
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={appointment.meetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-4 py-2 bg-pink-600 text-white text-sm rounded-lg hover:bg-pink-700 transition-colors"
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Join Meeting
+                      <ExternalLink className="h-4 w-4 ml-2" />
+                    </a>
+                  </div>
                 </div>
               )}
 

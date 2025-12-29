@@ -26,6 +26,7 @@ import Contact from "./pages/Contact.jsx";
 // Import layouts
 import MainLayout from "./layouts/MainLayout.jsx";
 import { StaffLayout } from "./layouts/StaffLayout.tsx";
+import DonorLayout from "./layouts/DonorLayout.jsx";
 
 // Import role-specific dashboards
 import DonorDashboard from "./pages/donor/Dashboard.jsx";
@@ -40,6 +41,7 @@ import StaffDonationLog from "./pages/staff/DonationLog";
 import StaffEHRTests from "./pages/staff/EHRTests";
 import StaffPayments from "./pages/staff/Payments";
 import StaffAlerts from "./pages/staff/Alerts";
+import VisitScheduleManagement from "./pages/staff/VisitScheduleManagement.jsx";
 
 // Import registration flow
 import RegistrationFlow from "./pages/RegistrationFlow.jsx";
@@ -48,6 +50,7 @@ import RegistrationFlow from "./pages/RegistrationFlow.jsx";
 import RewardsPage from "./pages/donor/RewardsPage.jsx";
 import Profile from "./pages/donor/Profile.jsx";
 import BookAppointment from "./pages/donor/BookAppointment.jsx";
+import MyAppointments from "./pages/donor/MyAppointments.jsx";
 import DonationHistory from "./pages/donor/DonationHistory.jsx";
 
 // Import ProtectedRoute
@@ -73,7 +76,7 @@ export default function AppRouter() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Login />} />
 
-          {/* Role-specific routes with protection */}
+          {/* Donor routes - individual pages without shared layout to preserve original design */}
           <Route
             path="/donor/dashboard"
             element={
@@ -111,6 +114,14 @@ export default function AppRouter() {
             element={
               <ProtectedRoute allowedRoles={["donor"]}>
                 <BookAppointment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/donor/appointments"
+            element={
+              <ProtectedRoute allowedRoles={["donor"]}>
+                <MyAppointments />
               </ProtectedRoute>
             }
           />
@@ -166,6 +177,18 @@ export default function AppRouter() {
               >
                 <StaffLayout>
                   <StaffAppointmentList />
+                </StaffLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/staff/visit-schedules"
+            element={
+              <ProtectedRoute
+                allowedRoles={["staff", "medical_staff", "admin_staff"]}
+              >
+                <StaffLayout>
+                  <VisitScheduleManagement />
                 </StaffLayout>
               </ProtectedRoute>
             }

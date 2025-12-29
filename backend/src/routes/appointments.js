@@ -24,6 +24,19 @@ const appointmentValidation = {
     preparation_instructions: Joi.string().max(1000).optional(),
   }),
 
+  bookAppointment: Joi.object({
+    date: Joi.date().iso().required(),
+    time: Joi.string()
+      .pattern(
+        /^([0-1]?[0-9]|2[0-3]):[0-5][0-9] - ([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+      )
+      .required(),
+    type: Joi.string()
+      .valid("screening", "donation", "medical_test", "consultation")
+      .default("donation"),
+    notes: Joi.string().max(1000).optional().allow(""),
+  }),
+
   updateAppointment: Joi.object({
     bank_id: Joi.string().guid({ version: "uuidv4" }).optional(),
     appointment_type: Joi.string()
@@ -83,27 +96,43 @@ const appointmentValidation = {
 
 // @route   GET /api/appointments
 // @desc    Get all appointments with filtering
-// @access  Private (Staff, Admin)
+// @access  Private (Staff, Admin, Donor)
 router.get(
   "/",
   authenticate,
-  authorize("staff", "admin", "nurse", "coordinator"),
+  authorize("staff", "admin", "nurse", "coordinator", "donor"),
   validationMiddleware.validatePagination,
   AppointmentController.getAppointments
 );
 
 // @route   GET /api/appointments/available-slots
 // @desc    Get available time slots for a specific date
-// @access  Private (Staff, Admin)
+// @access  Private (Donor, Staff, Admin)
 router.get(
   "/available-slots",
   authenticate,
-  authorize("staff", "admin", "nurse", "coordinator"),
+  authorize("donor", "staff", "admin", "nurse", "coordinator"),
   validationMiddleware.validateCustom(
     appointmentValidation.availableSlots,
     "query"
   ),
   AppointmentController.getAvailableSlots
+);
+
+// @route   GET /api/appointments/upcoming
+// @desc    Get upcoming appointments for current user
+// @access  Private (Donor)
+router.get(
+  "/upcoming",
+  authenticate,
+  async (req, res, next) => {
+    // For donors, get their own upcoming appointments
+    if (req.user.role === "donor") {
+      req.params.id = req.user.user_id;
+    }
+    next();
+  },
+  AppointmentController.getUpcomingAppointments
 );
 
 // @route   GET /api/appointments/:id
@@ -133,6 +162,17 @@ router.post(
   authorize("staff", "admin", "nurse", "coordinator"),
   validationMiddleware.validateCustom(appointmentValidation.createAppointment),
   AppointmentController.createAppointment
+);
+
+// @route   POST /api/appointments/book
+// @desc    Book appointment (for donors)
+// @access  Private (Donor)
+router.post(
+  "/book",
+  authenticate,
+  authorize("donor"),
+  validationMiddleware.validateCustom(appointmentValidation.bookAppointment),
+  AppointmentController.bookAppointment
 );
 
 // @route   PUT /api/appointments/:id

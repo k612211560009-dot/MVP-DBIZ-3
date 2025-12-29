@@ -283,26 +283,27 @@ const Login = () => {
         });
 
         if (result.success) {
-          // Mark that user just registered as donor and needs to complete registration
-          if (roleContext === "donor") {
-            sessionStorage.setItem("donorRegistrationIntent", "true");
-          }
+          // Registration successful with auto-login (from AuthContext)
+          toast.success("Registration successful! Welcome to Milk Bank.");
 
-          // After successful registration, switch to login mode
-          setIsLogin(true);
-          setFormData({
-            username: "",
-            email: formData.email, // Keep email for easy login
-            password: "",
-            confirmPassword: "",
-            fullName: "",
-            phoneNumber: "",
-            dateOfBirth: "",
-            address: "",
-          });
-          toast.success("Registration successful! Please sign in.", {
-            duration: 3000,
-          });
+          // Navigate to registration flow to complete donor profile
+          if (result.autoLoggedIn) {
+            navigate("/screening");
+          } else {
+            // Fallback: If auto-login didn't work, show login form
+            setIsLogin(true);
+            toast.info("Please login to continue");
+            setFormData({
+              username: "",
+              email: formData.email, // Keep email for easy login
+              password: "",
+              confirmPassword: "",
+              fullName: "",
+              phoneNumber: "",
+              dateOfBirth: "",
+              address: "",
+            });
+          }
         } else {
           const errorMsg =
             result.message || "Registration failed. Please try again.";
@@ -773,7 +774,7 @@ const Login = () => {
                 </div>
                 <button
                   type="button"
-                  className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                  className="text-sm text-pink-600 hover:text-pink-500 font-medium"
                   onClick={() => {
                     // TODO: Implement forgot password functionality
                     alert("Forgot password feature will be implemented soon");
@@ -857,7 +858,7 @@ const Login = () => {
             <div className="mt-6 text-center">
               <button
                 type="button"
-                className="text-blue-600 hover:text-blue-500 text-sm font-medium"
+                className="text-pink-600 hover:text-pink-500 text-sm font-medium"
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setError("");

@@ -66,6 +66,11 @@ module.exports = (sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      meeting_link: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        comment: "Video meeting link for screening interviews",
+      },
       reminder_sent: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -137,12 +142,6 @@ module.exports = (sequelize) => {
       as: "screeningSessions",
     });
 
-    // Appointment has many donation records
-    Appointment.hasMany(models.DonationRecord, {
-      foreignKey: "appointment_id",
-      as: "donationRecords",
-    });
-
     // Appointment has many medical tests
     Appointment.hasMany(models.MedicalTest, {
       foreignKey: "appointment_id",
@@ -152,4 +151,3 @@ module.exports = (sequelize) => {
 
   return Appointment;
 };
-

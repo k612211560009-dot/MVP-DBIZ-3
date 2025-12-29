@@ -30,16 +30,13 @@ export function Payments() {
 
   const handleMarkTransferred = () => {
     if (!transferDate) {
-      toast.error("Vui lòng chọn ngày chuyển khoản");
+      toast.error("Please select transfer date");
       return;
     }
 
-    toast.success(
-      `Đã đánh dấu đã chuyển khoản cho ${selectedPayment.donorName}`,
-      {
-        description: receiptFile ? "Biên lai đã được tải lên" : "",
-      }
-    );
+    toast.success(`Marked as transferred for ${selectedPayment.donorName}`, {
+      description: receiptFile ? "Receipt uploaded" : "",
+    });
 
     setIsTransferModalOpen(false);
     setSelectedPayment(null);
@@ -49,13 +46,13 @@ export function Payments() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
-      pending: { variant: "secondary", label: "Chờ xử lý", icon: Clock },
+      pending: { variant: "secondary", label: "Pending", icon: Clock },
       transferred: {
         variant: "default",
-        label: "Đã chuyển",
+        label: "Transferred",
         icon: CheckCircle,
       },
-      failed: { variant: "destructive", label: "Thất bại", icon: XCircle },
+      failed: { variant: "destructive", label: "Failed", icon: XCircle },
     };
     const config = variants[status] || {
       variant: "secondary",
@@ -95,26 +92,26 @@ export function Payments() {
     },
     {
       key: "amount",
-      header: "Số tiền",
+      header: "Amount",
       render: (payment: any) => formatCurrency(payment.amount),
     },
     {
       key: "requestedAt",
-      header: "Ngày yêu cầu",
+      header: "Request Date",
     },
     {
       key: "transferredAt",
-      header: "Ngày chuyển",
+      header: "Transfer Date",
       render: (payment: any) => payment.transferredAt || "-",
     },
     {
       key: "status",
-      header: "Trạng thái",
+      header: "Status",
       render: (payment: any) => getStatusBadge(payment.status),
     },
     {
       key: "actions",
-      header: "Thao tác",
+      header: "Actions",
       render: (payment: any) => (
         <div className="flex gap-2">
           {payment.status === "pending" && (
@@ -127,13 +124,13 @@ export function Payments() {
               }}
             >
               <CheckCircle className="h-4 w-4 mr-1" />
-              Đánh dấu đã chuyển
+              Mark Transferred
             </Button>
           )}
           {payment.status === "transferred" && payment.receiptUrl && (
             <Button variant="outline" size="sm">
               <Upload className="h-4 w-4 mr-1" />
-              Xem biên lai
+              View Receipt
             </Button>
           )}
         </div>
@@ -155,10 +152,8 @@ export function Payments() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1>Hỗ trợ thanh toán</h1>
-        <p className="text-muted-foreground">
-          Quản lý thanh toán cho các donor
-        </p>
+        <h1>Payment Support</h1>
+        <p className="text-muted-foreground">Manage payments for donors</p>
       </div>
 
       {/* Summary */}
@@ -167,7 +162,7 @@ export function Payments() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Chờ xử lý</p>
+                <p className="text-muted-foreground">Pending</p>
                 <h2>{pendingCount}</h2>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -178,7 +173,7 @@ export function Payments() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Đã chuyển</p>
+                <p className="text-muted-foreground">Transferred</p>
                 <h2>{transferredCount}</h2>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -189,7 +184,7 @@ export function Payments() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Tổng chờ thanh toán</p>
+                <p className="text-muted-foreground">Total Pending Amount</p>
                 <h2>{formatCurrency(totalPending)}</h2>
               </div>
               <Clock className="h-8 w-8 text-muted-foreground" />
@@ -204,25 +199,25 @@ export function Payments() {
           variant={statusFilter === "all" ? "default" : "outline"}
           onClick={() => setStatusFilter("all")}
         >
-          Tất cả
+          All
         </Button>
         <Button
           variant={statusFilter === "pending" ? "default" : "outline"}
           onClick={() => setStatusFilter("pending")}
         >
-          Chờ xử lý
+          Pending
         </Button>
         <Button
           variant={statusFilter === "transferred" ? "default" : "outline"}
           onClick={() => setStatusFilter("transferred")}
         >
-          Đã chuyển
+          Transferred
         </Button>
         <Button
           variant={statusFilter === "failed" ? "default" : "outline"}
           onClick={() => setStatusFilter("failed")}
         >
-          Thất bại
+          Failed
         </Button>
       </div>
 
@@ -230,16 +225,16 @@ export function Payments() {
       <DataTable
         data={filteredPayments}
         columns={columns}
-        emptyMessage="Không có yêu cầu thanh toán nào"
+        emptyMessage="No payment requests found"
       />
 
       {/* Mark as Transferred Modal */}
       <Dialog open={isTransferModalOpen} onOpenChange={setIsTransferModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xác nhận chuyển khoản</DialogTitle>
+            <DialogTitle>Confirm Transfer</DialogTitle>
             <DialogDescription>
-              Đánh dấu đã chuyển khoản cho donor
+              Mark as transferred for donor
               {selectedPayment && (
                 <div className="mt-2 p-3 bg-muted rounded-md">
                   <p>Donor: {selectedPayment.donorName}</p>
@@ -251,7 +246,7 @@ export function Payments() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="transferDate">Ngày chuyển khoản *</Label>
+              <Label htmlFor="transferDate">Transfer Date *</Label>
               <Input
                 id="transferDate"
                 type="date"
@@ -260,7 +255,7 @@ export function Payments() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="receipt">Tải lên biên lai (tùy chọn)</Label>
+              <Label htmlFor="receipt">Upload Receipt (optional)</Label>
               <Input
                 id="receipt"
                 type="file"
@@ -269,7 +264,7 @@ export function Payments() {
               />
               {receiptFile && (
                 <p className="text-sm text-muted-foreground">
-                  Đã chọn: {receiptFile.name}
+                  Selected: {receiptFile.name}
                 </p>
               )}
             </div>
@@ -284,9 +279,9 @@ export function Payments() {
                 setTransferDate("");
               }}
             >
-              Hủy
+              Cancel
             </Button>
-            <Button onClick={handleMarkTransferred}>Xác nhận</Button>
+            <Button onClick={handleMarkTransferred}>Confirm</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

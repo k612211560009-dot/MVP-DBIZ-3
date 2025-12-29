@@ -32,8 +32,8 @@ const volumeData = [
 ];
 
 const appointmentTypeData = [
-  { name: "Sàng lọc", value: 35 },
-  { name: "Hiến sữa", value: 65 },
+  { name: "Screening", value: 35 },
+  { name: "Donation", value: 65 },
 ];
 
 const COLORS = ["#2563eb", "#8b5cf6"]; // Blue and Purple
@@ -42,29 +42,29 @@ const recentActivities = [
   {
     id: "1",
     type: "approval",
-    message: "Hồ sơ Lê Thị C đã được duyệt",
-    time: "2 giờ trước",
+    message: "Le Thi C's profile has been approved",
+    time: "2 hours ago",
     donor: "MB-000125",
   },
   {
     id: "2",
     type: "donation",
-    message: "Hoàng Thị E đã hiến 400ml sữa",
-    time: "3 giờ trước",
+    message: "Hoang Thi E donated 400ml of milk",
+    time: "3 hours ago",
     donor: "MB-000127",
   },
   {
     id: "3",
     type: "payment",
-    message: "Đã chuyển khoản cho Hoàng Thị E - 300.000đ",
-    time: "5 giờ trước",
+    message: "Transfer completed for Hoang Thi E - 300,000đ",
+    time: "5 hours ago",
     donor: "MB-000127",
   },
   {
     id: "4",
     type: "registration",
-    message: "Đỗ Thị G đã đăng ký mới",
-    time: "1 ngày trước",
+    message: "Do Thi G registered as a new donor",
+    time: "1 day ago",
     donor: "MB-000129",
   },
 ];
@@ -117,7 +117,7 @@ export function Dashboard() {
       <div className="relative z-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white shadow-lg">
         <h1 className="text-3xl font-bold mb-2">Staff Dashboard</h1>
         <p className="text-blue-50 text-base">
-          Tổng quan hệ thống quản lý ngân hàng sữa mẹ
+          Milk Bank Management System Overview
         </p>
       </div>
 
@@ -134,9 +134,9 @@ export function Dashboard() {
           </div>
           <h3 className="text-3xl font-bold text-gray-900 mb-1">{newDonors}</h3>
           <p className="text-sm font-semibold text-gray-700">
-            Donor mới đăng ký
+            New Registered Donors
           </p>
-          <p className="text-xs font-medium text-gray-500 mt-1">Tháng này</p>
+          <p className="text-xs font-medium text-gray-500 mt-1">This month</p>
         </div>
 
         <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 hover:shadow-xl transition-all">
@@ -151,12 +151,8 @@ export function Dashboard() {
           <h3 className="text-3xl font-bold text-gray-900 mb-1">
             {approvedDonors}
           </h3>
-          <p className="text-sm font-semibold text-gray-700">
-            Donor chính thức
-          </p>
-          <p className="text-xs font-medium text-gray-500 mt-1">
-            Đã được duyệt
-          </p>
+          <p className="text-sm font-semibold text-gray-700">Official Donors</p>
+          <p className="text-xs font-medium text-gray-500 mt-1">Approved</p>
         </div>
 
         <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 hover:shadow-xl transition-all">
@@ -171,11 +167,9 @@ export function Dashboard() {
           <h3 className="text-3xl font-bold text-gray-900 mb-1">
             {totalVolume}ml
           </h3>
-          <p className="text-sm font-semibold text-gray-700">
-            Sữa mẹ tháng này
-          </p>
+          <p className="text-sm font-semibold text-gray-700">Milk This Month</p>
           <p className="text-xs font-medium text-gray-500 mt-1">
-            So với tháng trước
+            Compared to last month
           </p>
         </div>
 
@@ -189,7 +183,7 @@ export function Dashboard() {
             {todayAppointments}
           </h3>
           <p className="text-sm font-semibold text-gray-700">
-            Lịch hẹn hôm nay
+            Today's Appointments
           </p>
           <p className="text-xs font-medium text-gray-500 mt-1">21/10/2025</p>
         </div>
@@ -203,8 +197,10 @@ export function Dashboard() {
           <h3 className="text-3xl font-bold text-gray-900 mb-1">
             {activeAlerts}
           </h3>
-          <p className="text-sm font-semibold text-gray-700">Cảnh báo</p>
-          <p className="text-xs font-medium text-gray-500 mt-1">Cần xử lý</p>
+          <p className="text-sm font-semibold text-gray-700">Alerts</p>
+          <p className="text-xs font-medium text-gray-500 mt-1">
+            Needs attention
+          </p>
         </div>
       </div>
 
@@ -214,7 +210,7 @@ export function Dashboard() {
         <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Droplet className="h-5 w-5 text-blue-600" />
-            Lượng sữa theo tháng
+            Milk Volume by Month
           </h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -244,7 +240,7 @@ export function Dashboard() {
         <div className="relative bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Calendar className="h-5 w-5 text-blue-600" />
-            Lịch hẹn theo loại
+            Appointments by Type
           </h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -286,7 +282,7 @@ export function Dashboard() {
       <div className="relative z-10 bg-white rounded-xl shadow-md p-6 border-2 border-gray-200">
         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Bell className="h-5 w-5 text-blue-600" />
-          Hoạt động gần đây
+          Recent Activities
         </h3>
         <div className="space-y-4">
           {recentActivities.map((activity) => (

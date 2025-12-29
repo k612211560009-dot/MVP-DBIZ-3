@@ -2,11 +2,14 @@ import React from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Heart, User, Calendar, History, LogOut, Menu, X } from "lucide-react";
+import DifyChatbot from "../components/DifyChatbot";
 
-const DonorLayout = () => {
+const DonorLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+  console.log("🏠 [DonorLayout] Rendering layout for user:", user?.email);
 
   const handleLogout = () => {
     logout();
@@ -14,7 +17,7 @@ const DonorLayout = () => {
   };
 
   const navigation = [
-    { name: "Dashboard", href: "/donor", icon: Heart },
+    { name: "Dashboard", href: "/donor/dashboard", icon: Heart },
     { name: "Profile", href: "/donor/profile", icon: User },
     { name: "Book Appointment", href: "/donor/appointment", icon: Calendar },
     { name: "Donation History", href: "/donor/history", icon: History },
@@ -22,6 +25,9 @@ const DonorLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Dify AI Chatbot */}
+      <DifyChatbot />
+
       {/* Mobile sidebar */}
       <div
         className={`fixed inset-0 z-40 lg:hidden ${
@@ -138,7 +144,7 @@ const DonorLayout = () => {
         <main className="flex-1">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <Outlet />
+              {children || <Outlet />}
             </div>
           </div>
         </main>

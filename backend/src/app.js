@@ -12,6 +12,11 @@ const { sequelize } = require("./models");
 const app = express();
 
 /**
+ * Trust proxy for ngrok/reverse proxy
+ */
+app.set("trust proxy", 1);
+
+/**
  * Security Middleware
  */
 app.use(helmet());
@@ -19,16 +24,42 @@ app.use(helmet());
 /**
  * CORS Configuration
  */
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    // Get allowed origins from env or use defaults
+    const allowedOrigins = process.env.CORS_ORIGIN
       ? process.env.CORS_ORIGIN.split(",")
-      : ["http://localhost:3000"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+      : ["http://localhost:3000"];
+
+    // Check if origin matches any allowed origin (including wildcards)
+    const isAllowed = allowedOrigins.some((allowed) => {
+      if (allowed.includes("*")) {
+        // Convert wildcard pattern to regex (escape dots first, then replace *)
+        const pattern = allowed.replace(/\./g, "\\.").replace(/\*/g, ".*");
+        const regex = new RegExp(`^${pattern}$`);
+        console.log(`🔍 Testing origin: ${origin} against pattern: ${pattern}`);
+        return regex.test(origin);
+      }
+      return allowed === origin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.error(`🚫 CORS blocked origin: ${origin}`);
+      console.error(`📋 Allowed patterns: ${allowedOrigins.join(", ")}`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 /**
  * Rate Limiting

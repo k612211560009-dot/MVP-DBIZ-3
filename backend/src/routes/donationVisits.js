@@ -17,6 +17,14 @@ const { authenticate } = require("../middleware/auth");
 router.get("/", authenticate, DonationVisitController.getAllVisits);
 
 /**
+ * @route   GET /api/donation-visits/pending
+ * @desc    Get pending visits for staff to review
+ * @access  Private (Medical Staff, Admin)
+ * @query   page, limit, bank_id
+ */
+router.get("/pending", authenticate, DonationVisitController.getPendingVisits);
+
+/**
  * @route   GET /api/donation-visits/:id
  * @desc    Get donation visit by ID
  * @access  Private (Medical Staff, Admin, Donor - own visits)
@@ -40,6 +48,28 @@ router.post("/", authenticate, DonationVisitController.createVisit);
  * @body    { status, health_status, health_notes, actual_start, actual_end }
  */
 router.patch("/:id", authenticate, DonationVisitController.updateVisit);
+
+/**
+ * @route   PATCH /api/donation-visits/:id/confirm
+ * @desc    Confirm scheduled visit (Staff action)
+ * @access  Private (Medical Staff, Admin)
+ * @params  id - visit_id
+ * @body    { notes }
+ */
+router.patch(
+  "/:id/confirm",
+  authenticate,
+  DonationVisitController.confirmVisit
+);
+
+/**
+ * @route   PATCH /api/donation-visits/:id/reject
+ * @desc    Reject scheduled visit (Staff action)
+ * @access  Private (Medical Staff, Admin)
+ * @params  id - visit_id
+ * @body    { reason }
+ */
+router.patch("/:id/reject", authenticate, DonationVisitController.rejectVisit);
 
 /**
  * @route   POST /api/donation-visits/:id/record-donation

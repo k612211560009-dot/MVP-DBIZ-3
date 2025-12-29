@@ -1,0 +1,63 @@
+DETAILED SYSTEM WORKFLOW (SƠ ĐỒ QUY TRÌNH HỆ THỐNG)
+Process 1: Donor Registry & Approval (Đăng ký & Phê duyệt)
+
+Step 1 - Registration: Mother fills out the Registration Form.
+
+Step 2 - Verification: System verifies the form. If valid, move to Step 3.
+
+
+Step 3 - Interview Scheduling: Mother schedules a screening interview.
+
+
+Step 4 - Coordination: System assigns medical staff and schedules a Google Meet session.
+
+
+
+Step 5 - Staff Approval: Medical staff conduct the interview and approve screening information.
+
+
+
+Step 6 - EHR Extraction: System extracts infectious disease test results from EHR.
+
+
+Step 7 - Lab Verification: System verifies test results. If all are negative and valid, move to Step 8.
+
+
+
+Step 8 - Profile Creation: System creates a Donor Profile for the mother.
+
+
+
+Step 9 - Director Approval: The Director of the Milk Bank reviews and approves the Donor Profile.
+
+
+
+Step 10 - Consent: Mother signs the digital consent form to donate milk.
+
+
+
+Step 11 - Final Activation: System updates the Donor Profile and adds the mother to the "Donor Milk Donation Log".
+
+
+Process 2: Donated Milk Collection (Thu nhận Sữa hiến tặng)
+
+Step 1 - Scheduling: Mother schedules a Milk Donation Visit via the portal.
+
+
+
+Step 2 - Verification: Medical staff check and verify the donor's identity upon arrival.
+
+
+Step 3 - Health Check: Staff assess current health. If in good condition, proceed; otherwise, the session is cancelled.
+
+
+
+Step 4 - Milk Expression: Mother performs milk expression with support from medical staff.
+
+
+
+Step 5 - Recording: Staff record the donated milk volume in the system.
+
+
+
+Step 6 - Rewards: System logs the donation and awards points to the donor.

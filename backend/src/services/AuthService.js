@@ -29,7 +29,7 @@ class AuthService {
     };
 
     return jwt.sign(payload, _env.JWT_SECRET, {
-      expiresIn: _env.JWT_EXPIRES_IN || "1h", // Shorter for security
+      expiresIn: _env.JWT_EXPIRES_IN || "24h", // Extended to prevent logout during registration
       issuer: "milk-bank-system",
     });
   }

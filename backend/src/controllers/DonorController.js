@@ -3,7 +3,7 @@ const {
   User,
   Appointment,
   ScreeningSession,
-  DonationRecord,
+  DonationVisit,
   PointTransaction,
 } = require("../models");
 const { Op } = require("sequelize");
@@ -143,14 +143,14 @@ class DonorController {
             ],
           },
           {
-            model: DonationRecord,
-            as: "donationRecords",
-            order: [["donation_date", "DESC"]],
+            model: DonationVisit,
+            as: "donations",
+            order: [["scheduled_start", "DESC"]],
             limit: 10,
             include: [
               {
                 model: User,
-                as: "collector",
+                as: "recorder",
                 attributes: ["user_id", "email"],
               },
             ],
@@ -172,11 +172,11 @@ class DonorController {
       }
 
       // Calculate statistics
-      const totalDonations = await DonationRecord.count({
+      const totalDonations = await DonationVisit.count({
         where: { donor_id: id },
       });
 
-      const totalVolume = await DonationRecord.sum("volume_collected", {
+      const totalVolume = await DonationVisit.sum("volume_ml", {
         where: { donor_id: id },
       });
 
@@ -429,15 +429,16 @@ class DonorController {
       });
 
       // Get recent donations
-      const recentDonations = await DonationRecord.findAll({
+      const recentDonations = await DonationVisit.findAll({
         where: { donor_id: id },
-        order: [["donation_date", "DESC"]],
+        order: [["scheduled_start", "DESC"]],
         limit: 5,
         include: [
           {
             model: User,
-            as: "collector",
+            as: "recorder",
             attributes: ["user_id", "email"],
+            required: false, // LEFT JOIN to handle cases where recorder might be null
           },
         ],
       });
@@ -447,17 +448,19 @@ class DonorController {
       currentMonth.setDate(1);
       currentMonth.setHours(0, 0, 0, 0);
 
-      const monthlyDonations = await DonationRecord.count({
+      const monthlyDonations = await DonationVisit.count({
         where: {
           donor_id: id,
-          donation_date: { [Op.gte]: currentMonth },
+          scheduled_start: { [Op.gte]: currentMonth },
+          status: "completed",
         },
       });
 
-      const monthlyVolume = await DonationRecord.sum("volume_collected", {
+      const monthlyVolume = await DonationVisit.sum("volume_ml", {
         where: {
           donor_id: id,
-          donation_date: { [Op.gte]: currentMonth },
+          scheduled_start: { [Op.gte]: currentMonth },
+          status: "completed",
         },
       });
 

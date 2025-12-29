@@ -1,5 +1,7 @@
 const { Donor, EhrDonor, User } = require("../models");
 const { v4: uuidv4 } = require("uuid");
+const DemoDataGeneratorService = require("../services/DemoDataGeneratorService");
+const NotificationController = require("./NotificationController");
 
 /**
  * Donor Registration Controller
@@ -25,8 +27,19 @@ class DonorRegistrationController {
         address,
       } = req.body;
 
+      // Debug log
+      console.log("Registration request body:", req.body);
+      console.log("User ID:", userId);
+
       // Validate required fields
       if (!fullName || !dob || !idPassport || !phone || !email) {
+        console.log("Missing fields:", {
+          fullName: !!fullName,
+          dob: !!dob,
+          idPassport: !!idPassport,
+          phone: !!phone,
+          email: !!email,
+        });
         return res.status(400).json({
           message: "Missing required fields",
           required: ["fullName", "dob", "idPassport", "phone", "email"],
@@ -35,23 +48,40 @@ class DonorRegistrationController {
 
       // Check if donor already exists
       const existingDonor = await Donor.findByPk(userId);
+      console.log("Existing donor:", existingDonor?.toJSON());
+
       if (existingDonor && existingDonor.donor_status !== "in_progress") {
+        console.log(
+          "Donor already registered with status:",
+          existingDonor.donor_status
+        );
         return res.status(400).json({
           message: "Registration already completed",
         });
       }
 
       // Update User table with basic info
-      await User.update(
-        {
-          name: fullName,
-          phone: phone,
-          national_id: idPassport,
-        },
-        {
-          where: { user_id: userId },
+      try {
+        await User.update(
+          {
+            name: fullName,
+            phone: phone,
+            national_id: idPassport,
+          },
+          {
+            where: { user_id: userId },
+          }
+        );
+      } catch (updateError) {
+        if (updateError.name === "SequelizeUniqueConstraintError") {
+          return res.status(400).json({
+            message: "National ID already registered",
+            field: "idPassport",
+            error: "DUPLICATE_NATIONAL_ID",
+          });
         }
-      );
+        throw updateError;
+      }
 
       // Create or update Donor record
       const [donor, created] = await Donor.upsert({
@@ -66,6 +96,8 @@ class DonorRegistrationController {
       // Mock EHR API integration - Always return negative results (pass)
       // In production, this would call government health API
       const mockEhrData = {
+        donor_id: userId,
+        national_id: idPassport,
         full_name: fullName,
         date_of_birth: dob,
         phone: phone,
@@ -74,7 +106,6 @@ class DonorRegistrationController {
         province: province,
         district: district,
         ward: ward,
-        national_id: idPassport,
         source_system: "mock_government_ehr",
         last_fetched_at: new Date(),
         // Mock health test results - always negative (pass)
@@ -98,14 +129,55 @@ class DonorRegistrationController {
 
       // Create or update EHR record with mock government data
       // In production, this data comes from actual government EHR API
-      await EhrDonor.upsert({
-        donor_id: userId,
-        ...mockEhrData,
-      });
+      await EhrDonor.upsert(mockEhrData);
 
       console.log(
         `✅ EHR data synced for donor ${userId}: is_clear=${mockEhrData.is_clear}`
       );
+
+      // Auto-generate demo data (visit schedules and donation records)
+      // This simulates a donor with existing history for demo/testing purposes
+      if (DemoDataGeneratorService.isDemoModeEnabled()) {
+        try {
+          await DemoDataGeneratorService.generateForNewDonor(
+            userId,
+            new Date()
+          );
+          console.log(
+            `🎭 [DEMO MODE] Generated simulation data for donor ${userId}`
+          );
+        } catch (demoError) {
+          console.error("Error generating demo data:", demoError);
+          // Don't fail registration if demo data generation fails
+        }
+      }
+
+      // Create notification for staff about new donor registration
+      try {
+        await NotificationController.createNotification({
+          type: "new_donor_registration",
+          title: "New Donor Registration",
+          message: `New donor ${fullName} has completed registration. EHR status: ${
+            mockEhrData.is_clear ? "Clear" : "Pending Review"
+          }`,
+          priority: "high",
+          related_donor_id: userId,
+          related_entity_type: "donor",
+          related_entity_id: userId,
+          metadata: {
+            donor_name: fullName,
+            donor_email: email,
+            donor_phone: phone,
+            registration_date: new Date().toISOString(),
+            ehr_clear: mockEhrData.is_clear,
+            all_tests_negative: true,
+          },
+        });
+        console.log(`🔔 Notification created for new donor: ${fullName}`);
+      } catch (notifError) {
+        console.error("Error creating notification:", notifError);
+        // Don't fail registration if notification creation fails
+      }
 
       return res.json({
         message: "Registration submitted successfully",

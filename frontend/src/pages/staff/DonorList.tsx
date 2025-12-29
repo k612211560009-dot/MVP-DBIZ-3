@@ -92,7 +92,7 @@ export function DonorList() {
       }));
     } catch (error: any) {
       console.error("Error fetching donors:", error);
-      toast.error("Không thể tải danh sách donor", {
+      toast.error("Unable to load donor list", {
         description: error?.response?.data?.message || error.message,
       });
     } finally {
@@ -102,13 +102,13 @@ export function DonorList() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
-      in_progress: { variant: "secondary", label: "Đang đăng ký" },
-      active: { variant: "default", label: "Đang hoạt động" },
-      suspended: { variant: "outline", label: "Tạm ngưng" },
-      removed: { variant: "destructive", label: "Đã xóa" },
-      rejected: { variant: "destructive", label: "Từ chối" },
-      failed_positive: { variant: "destructive", label: "Test dương tính" },
-      abandoned: { variant: "secondary", label: "Đã bỏ" },
+      in_progress: { variant: "secondary", label: "Registering" },
+      active: { variant: "default", label: "Active" },
+      suspended: { variant: "outline", label: "Suspended" },
+      removed: { variant: "destructive", label: "Removed" },
+      rejected: { variant: "destructive", label: "Rejected" },
+      failed_positive: { variant: "destructive", label: "Test Positive" },
+      abandoned: { variant: "secondary", label: "Abandoned" },
     };
     const config = variants[status] || { variant: "secondary", label: status };
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -152,43 +152,43 @@ export function DonorList() {
     },
     {
       key: "name",
-      header: "Họ và tên",
+      header: "Full Name",
     },
     {
       key: "phone",
-      header: "Số điện thoại",
+      header: "Phone Number",
     },
     {
       key: "dob",
-      header: "Ngày sinh",
+      header: "Date of Birth",
     },
     {
       key: "status",
-      header: "Trạng thái",
+      header: "Status",
       render: (donor: any) => getStatusBadge(donor.status),
     },
     {
       key: "isClear",
-      header: "Sàng lọc Y tế",
+      header: "Medical Screening",
       render: (donor: any) => (
         <div className="flex items-center gap-1">
           {donor.isClear ? (
             <Badge variant="default" className="bg-green-600">
-              ✓ Âm tính
+              ✓ Negative
             </Badge>
           ) : (
-            <Badge variant="secondary">Chưa rõ</Badge>
+            <Badge variant="secondary">Unknown</Badge>
           )}
         </div>
       ),
     },
     {
       key: "registeredAt",
-      header: "Ngày đăng ký",
+      header: "Registration Date",
     },
     {
       key: "actions",
-      header: "Thao tác",
+      header: "Actions",
       render: (donor: any) => (
         <div className="flex gap-2">
           <Button
@@ -198,7 +198,7 @@ export function DonorList() {
               setSelectedDonor(donor);
               setIsDrawerOpen(true);
             }}
-            title="Xem chi tiết"
+            title="View details"
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -206,7 +206,7 @@ export function DonorList() {
             variant="ghost"
             size="icon"
             onClick={() => navigate(`/staff/donors/${donor.id}`)}
-            title="Xem hồ sơ đầy đủ"
+            title="View full profile"
           >
             <MessageSquare className="h-4 w-4" />
           </Button>
@@ -214,7 +214,7 @@ export function DonorList() {
             variant="ghost"
             size="icon"
             onClick={() => navigate("/staff/appointments")}
-            title="Xem lịch hẹn"
+            title="View appointments"
           >
             <Calendar className="h-4 w-4" />
           </Button>
@@ -228,13 +228,13 @@ export function DonorList() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1>Danh sách Donor</h1>
+          <h1>Donor List</h1>
           <p className="text-muted-foreground">
-            Quản lý thông tin các mẹ hiến sữa ({pagination.total} donors)
+            Manage milk donor information ({pagination.total} donors)
           </p>
         </div>
         <Button onClick={() => navigate("/staff/donors/new")}>
-          Tạo hồ sơ thủ công
+          Create Manual Profile
         </Button>
       </div>
 
@@ -242,7 +242,7 @@ export function DonorList() {
       <div className="flex gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Tìm kiếm theo email..."
+            placeholder="Search by email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -250,15 +250,15 @@ export function DonorList() {
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48">
             <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Lọc trạng thái" />
+            <SelectValue placeholder="Filter status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tất cả trạng thái</SelectItem>
-            <SelectItem value="in_progress">Đang đăng ký</SelectItem>
-            <SelectItem value="active">Đang hoạt động</SelectItem>
-            <SelectItem value="suspended">Tạm ngưng</SelectItem>
-            <SelectItem value="removed">Đã xóa</SelectItem>
-            <SelectItem value="rejected">Từ chối</SelectItem>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="in_progress">Registering</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+            <SelectItem value="removed">Removed</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -267,7 +267,7 @@ export function DonorList() {
       {loading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Đang tải danh sách donor...</span>
+          <span className="ml-2">Loading donor list...</span>
         </div>
       )}
 
@@ -276,7 +276,7 @@ export function DonorList() {
         <DataTable
           data={tableData}
           columns={columns}
-          emptyMessage="Chưa có donor nào. Tạo hồ sơ thủ công để bắt đầu."
+          emptyMessage="No donors yet. Create a manual profile to get started."
         />
       )}
 
@@ -324,9 +324,9 @@ export function DonorList() {
           >
             <div className="p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold">Thông tin Donor</h3>
+                <h3 className="text-lg font-semibold">Donor Information</h3>
                 <p className="text-sm text-gray-600">
-                  Xem nhanh thông tin chi tiết
+                  Quick view of detailed information
                 </p>
               </div>
               {selectedDonor && (
@@ -336,16 +336,18 @@ export function DonorList() {
                     <p className="font-medium">{selectedDonor.id}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Họ và tên</label>
+                    <label className="text-sm text-gray-600">Full Name</label>
                     <p className="font-medium">{selectedDonor.name}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Ngày sinh</label>
+                    <label className="text-sm text-gray-600">
+                      Date of Birth
+                    </label>
                     <p className="font-medium">{selectedDonor.dob}</p>
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">
-                      Số điện thoại
+                      Phone Number
                     </label>
                     <p className="font-medium">{selectedDonor.phone}</p>
                   </div>
@@ -354,7 +356,7 @@ export function DonorList() {
                     <p className="font-medium">{selectedDonor.email}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Địa chỉ</label>
+                    <label className="text-sm text-gray-600">Address</label>
                     <p className="font-medium">{selectedDonor.address}</p>
                     {selectedDonor.ward && (
                       <p className="text-sm text-gray-500 mt-1">
@@ -364,7 +366,7 @@ export function DonorList() {
                     )}
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Trạng thái</label>
+                    <label className="text-sm text-gray-600">Status</label>
                     <div className="mt-1">
                       {getStatusBadge(selectedDonor.status)}
                     </div>
@@ -373,17 +375,17 @@ export function DonorList() {
                   {/* Health Screening Results */}
                   <div className="border-t pt-4">
                     <label className="text-sm text-gray-600 font-semibold">
-                      Kết quả sàng lọc Y tế
+                      Medical Screening Results
                     </label>
                     <div className="mt-2 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Tình trạng chung:</span>
+                        <span className="text-sm">Overall status:</span>
                         {selectedDonor.isClear ? (
                           <Badge variant="default" className="bg-green-600">
-                            ✓ Âm tính toàn bộ
+                            ✓ All Negative
                           </Badge>
                         ) : (
-                          <Badge variant="secondary">Chưa có kết quả</Badge>
+                          <Badge variant="secondary">No results yet</Badge>
                         )}
                       </div>
                       {selectedDonor.healthTests && (
@@ -407,7 +409,7 @@ export function DonorList() {
                             </Badge>
                           </div>
                           <div>
-                            Giang mai:{" "}
+                            Syphilis:{" "}
                             <Badge variant="outline" className="text-xs">
                               {selectedDonor.healthTests.syphilis}
                             </Badge>
@@ -425,7 +427,7 @@ export function DonorList() {
 
                   <div>
                     <label className="text-sm text-gray-600">
-                      Ngày đăng ký
+                      Registration Date
                     </label>
                     <p className="font-medium">{selectedDonor.registeredAt}</p>
                   </div>
@@ -437,13 +439,13 @@ export function DonorList() {
                         setIsDrawerOpen(false);
                       }}
                     >
-                      Xem hồ sơ đầy đủ
+                      View Full Profile
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => setIsDrawerOpen(false)}
                     >
-                      Đóng
+                      Close
                     </Button>
                   </div>
                 </div>

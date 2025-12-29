@@ -1,4 +1,5 @@
-import { Permission, User, UserPermission } from "../models";
+import db from "../models/index.js";
+const { Permission, User, UserPermission } = db;
 
 /**
  * Seed default permissions based on Business Rules

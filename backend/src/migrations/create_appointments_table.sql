@@ -1,0 +1,25 @@
+-- Create appointments table without foreign keys first
+CREATE TABLE IF NOT EXISTS `appointments` (
+  `appointment_id` CHAR(36) NOT NULL PRIMARY KEY,
+  `donor_id` CHAR(36) NOT NULL,
+  `bank_id` CHAR(36) NOT NULL,
+  `appointment_type` ENUM('screening', 'donation', 'medical_test', 'consultation') NOT NULL,
+  `appointment_date` DATETIME NOT NULL,
+  `time_slot` VARCHAR(50),
+  `status` ENUM('scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show') DEFAULT 'scheduled',
+  `priority_level` ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal',
+  `notes` TEXT,
+  `preparation_instructions` TEXT,
+  `meeting_link` VARCHAR(500) COMMENT 'Video meeting link for screening interviews',
+  `reminder_sent` TINYINT(1) DEFAULT 0,
+  `created_by` CHAR(36),
+  `cancelled_reason` TEXT,
+  `cancelled_at` DATETIME,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_donor_id` (`donor_id`),
+  INDEX `idx_bank_id` (`bank_id`),
+  INDEX `idx_appointment_date` (`appointment_date`),
+  INDEX `idx_status` (`status`),
+  INDEX `idx_appointment_type` (`appointment_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,5 +1,7 @@
-import { sequelize } from "../models/index.js";
+import db from "../models/index.js";
+const { sequelize } = db;
 import { seedPermissions, assignRolePermissions } from "./permissionSeeder.js";
+import { seedDonationVisits } from "./donationVisitSeeder.js";
 import { fileURLToPath } from "url";
 
 /**
@@ -73,7 +75,15 @@ const seedData = {
       screening_status: "approved",
       director_status: "approved",
       registration_step: 10,
-      points_total: 250,
+      points_total: 0, // Will be updated after donation visits seeding
+      // Schedule preferences (captured during registration)
+      weekly_days: 42, // Binary: 101010 = Tuesday (2) + Thursday (8) + Saturday (32) = 42
+      preferred_start: "09:00:00",
+      preferred_end: "15:00:00",
+      max_visits_per_week: 2,
+      consent_signed_at: new Date("2025-12-01T10:00:00Z"),
+      consent_method: "online_form",
+      created_at: new Date("2025-12-01T10:00:00Z"), // Registration date
     },
   ],
 
@@ -126,16 +136,30 @@ async function seedDatabase() {
     // });
     // console.log("✅ Reward rules seeded");
 
-    // Seed permissions and role assignments
-    await seedPermissions();
-    await assignRolePermissions();
+    // Seed permissions and role assignments (skip if permissions table doesn't exist)
+    try {
+      await seedPermissions();
+      await assignRolePermissions();
+      console.log("✅ Permissions seeded");
+    } catch (error) {
+      console.log("⚠️  Skipping permissions (table doesn't exist)");
+    }
 
-    console.log("🎉 Database seeding completed successfully!");
+    // Seed donation visits and schedules
+    console.log("\n📅 Seeding donation visits and schedules...");
+    await seedDonationVisits();
+
+    console.log("\n🎉 Database seeding completed successfully!");
     console.log("\n📋 Test accounts created:");
     console.log("- Admin Staff: admin@milkbank.com / password123");
     console.log("- Milk Bank Manager: manager@milkbank.com / password123");
     console.log("- Medical Staff: staff@milkbank.com / password123");
     console.log("- Donor: donor1@example.com / password123");
+    console.log("\n📊 Donation data seeded:");
+    console.log("- Past donations (completed with points)");
+    console.log("- Cancelled visit (health issue scenario)");
+    console.log("- Upcoming scheduled visits");
+    console.log("- Proposed visits (pending staff review)");
   } catch (error) {
     console.error("❌ Database seeding failed:", error);
     throw error;

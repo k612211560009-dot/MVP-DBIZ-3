@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
@@ -170,6 +170,16 @@ export default function RegistrationFlow() {
   const [confirmCorrect, setConfirmCorrect] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
+  // Load user email on mount
+  useEffect(() => {
+    if (user?.email) {
+      setPersonalInfo((prev) => ({
+        ...prev,
+        email: user.email,
+      }));
+    }
+  }, [user]);
+
   // Helper functions
   const handlePersonalInfoChange = (field, value) => {
     setPersonalInfo((prev) => ({ ...prev, [field]: value }));
@@ -283,9 +293,11 @@ export default function RegistrationFlow() {
             "Your profile has been created. Please review your information.",
         });
 
-        // Navigate to donor profile page to show complete information
+        // Navigate to donor profile page with refresh signal
         setTimeout(() => {
-          navigate("/donor/profile");
+          navigate("/donor/profile", {
+            state: { refresh: Date.now() }, // Trigger profile refresh
+          });
         }, 1500);
       }
     } catch (error) {

@@ -5,6 +5,8 @@ const appointmentRoutes = require("./appointments");
 const screeningRoutes = require("./screening");
 const donationVisitRoutes = require("./donationVisits");
 const staffRoutes = require("./staff");
+const scheduleRoutes = require("./schedules");
+const notificationRoutes = require("./notifications");
 
 const router = express.Router();
 
@@ -31,6 +33,8 @@ router.use("/appointments", appointmentRoutes);
 router.use("/screening", screeningRoutes);
 router.use("/donation-visits", donationVisitRoutes);
 router.use("/staff", staffRoutes);
+router.use("/schedules", scheduleRoutes);
+router.use("/notifications", notificationRoutes);
 
 // TODO: Add remaining route modules here
 // router.use('/medical-tests', medicalTestRoutes);

@@ -1,3 +1,33 @@
+-- ===========================
+-- EXECUTE THIS FIRST: Create audit_logs table
+-- ===========================
+USE milkbank_dev;
+
+CREATE TABLE IF NOT EXISTS `audit_logs` (
+  `log_id` char(36) PRIMARY KEY,
+  `user_id` char(36),
+  `action` varchar(100) NOT NULL,
+  `resource_type` varchar(50),
+  `resource_id` varchar(36),
+  `old_values` text,
+  `new_values` text,
+  `ip_address` varchar(45),
+  `user_agent` varchar(500),
+  `status` enum('success','failure','pending') NOT NULL DEFAULT 'success',
+  `error_message` text,
+  `metadata` text,
+  `timestamp` timestamp NOT NULL DEFAULT (now()),
+  INDEX (`user_id`),
+  INDEX (`action`),
+  INDEX (`timestamp`),
+  INDEX (`resource_type`, `resource_id`),
+  INDEX (`status`),
+  INDEX (`ip_address`)
+);
+
+-- ===========================
+-- Original Schema
+-- ===========================
 CREATE TABLE `USER` (
   `user_id` varchar(36) PRIMARY KEY,
   `email` varchar(255) UNIQUE NOT NULL,

@@ -1,0 +1,14 @@
+Blood screening standards for milk donors:
+- HIV, Hepatitis B/C: must be negative
+- Syphilis test: negative
+- Hemoglobin: ≥ 12 g/dL
+
+Microbiological standards for expressed milk:
+- Total bacterial count: < 10⁵ CFU/mL
+- No pathogenic bacteria (e.g., Salmonella, E. coli)
+
+Pasteurization process (Holder method):
+1. Collect milk in sterile containers
+2. Cool to 4°C within 4 hours
+3. Pasteurize at 62.5°C for 30 minutes
+4. Rapid cooling and freeze at -20°C

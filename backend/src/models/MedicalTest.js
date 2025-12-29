@@ -141,10 +141,10 @@ module.exports = (sequelize) => {
       as: "appointment",
     });
 
-    // MedicalTest belongs to DonationRecord
-    MedicalTest.belongsTo(models.DonationRecord, {
-      foreignKey: "donation_id",
-      as: "donationRecord",
+    // MedicalTest belongs to DonationVisit
+    MedicalTest.belongsTo(models.DonationVisit, {
+      foreignKey: "visit_id",
+      as: "donationVisit",
     });
 
     // MedicalTest belongs to User (reviewer)
@@ -156,4 +156,3 @@ module.exports = (sequelize) => {
 
   return MedicalTest;
 };
-

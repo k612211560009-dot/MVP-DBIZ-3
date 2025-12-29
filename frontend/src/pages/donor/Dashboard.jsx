@@ -13,6 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { api } from "../../services/api";
+import DifyChatbot from "../../components/DifyChatbot";
 
 const DonorDashboard = () => {
   const { user } = useAuth();
@@ -33,11 +34,35 @@ const DonorDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+      console.log("📊 Fetching dashboard for user:", user?.user_id);
+      console.log("🔑 Auth token exists:", !!localStorage.getItem("token"));
+
       // Use the correct endpoint with donor ID
       const response = await api.get(`/donors/${user.user_id}/dashboard`);
-      setDashboardData(response.data);
+      console.log("✅ Dashboard data loaded:", response.data);
+
+      // Extract the actual data from the API response
+      const apiData = response.data.data;
+
+      setDashboardData({
+        donor: apiData.donor,
+        totalDonations: apiData.statistics?.monthlyDonations || 0,
+        totalVolume: apiData.statistics?.monthlyVolume || 0,
+        rewardPoints: apiData.donor?.points_total || 0,
+        upcomingAppointments: apiData.upcomingAppointments || [],
+        recentDonations: (apiData.recentDonations || []).map((donation) => ({
+          volume: donation.volume_ml,
+          date: donation.scheduled_start,
+          status: donation.status,
+          recorder: donation.recorder?.email || "N/A",
+        })),
+        notifications: [],
+      });
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      console.error("❌ Error fetching dashboard data:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+
       // Use mock data if API fails (for MVP demo)
       setDashboardData({
         totalDonations: user?.donorProfile ? 3 : 0,
@@ -67,17 +92,16 @@ const DonorDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <DifyChatbot />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Back to Home Button */}
-        <div className="flex justify-between items-center">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <Home className="h-5 w-5" />
-            <span className="font-medium">Back to Home</span>
-          </Link>
-        </div>
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <Home className="h-5 w-5" />
+          <span>Back to Home</span>
+        </button>
 
         {/* Header */}
         <div className="bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg p-6 text-white">
@@ -360,7 +384,7 @@ const DonorDashboard = () => {
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Quick Actions
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <button
               onClick={() => navigate("/donor/appointment")}
               className="flex items-center p-4 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors text-left w-full"
@@ -370,6 +394,19 @@ const DonorDashboard = () => {
                 <p className="font-medium text-gray-900">Book Appointment</p>
                 <p className="text-sm text-gray-500">
                   Schedule your next donation
+                </p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => navigate("/donor/appointments")}
+              className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left w-full"
+            >
+              <CheckCircle className="h-8 w-8 text-purple-600 mr-3" />
+              <div>
+                <p className="font-medium text-gray-900">My Appointments</p>
+                <p className="text-sm text-gray-500">
+                  View all scheduled appointments
                 </p>
               </div>
             </button>

@@ -134,17 +134,35 @@ export const AuthProvider = ({ children }) => {
         return { success: true, message: "Registration successful (mock)" };
       }
       const response = await api.post("/auth/register", userData);
+
+      // Auto-login after successful registration
+      if (response.data.success) {
+        const loginResult = await login(
+          { email: userData.email, password: userData.password },
+          false // Don't remember me by default
+        );
+
+        if (loginResult.success) {
+          return {
+            success: true,
+            message: "Registration successful",
+            details: response.data.details,
+            autoLoggedIn: true,
+          };
+        }
+      }
+
       return {
         success: true,
         message: "Registration successful",
-        details: response.data.details, // Pass backend validation errors if any
+        details: response.data.details,
       };
     } catch (error) {
       console.error("Registration error:", error);
       return {
         success: false,
         message: error.response?.data?.message || "Registration failed",
-        details: error.response?.data?.details || [], // Backend field errors
+        details: error.response?.data?.details || [],
       };
     }
   };

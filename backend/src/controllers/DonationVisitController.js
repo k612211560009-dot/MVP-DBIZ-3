@@ -583,6 +583,257 @@ class DonationVisitController {
       });
     }
   }
+
+  /**
+   * Confirm visit (Staff action)
+   * PATCH /api/donation-visits/:id/confirm
+   */
+  async confirmVisit(req, res) {
+    try {
+      const { id } = req.params;
+      const { notes } = req.body;
+
+      const visit = await DonationVisit.findByPk(id);
+
+      if (!visit) {
+        return res.status(404).json({
+          error: "Visit not found",
+        });
+      }
+
+      if (visit.status !== "scheduled") {
+        return res.status(400).json({
+          error: "Invalid status",
+          message: "Only scheduled visits can be confirmed",
+        });
+      }
+
+      // Update visit status to confirmed
+      await visit.update({
+        status: "confirmed",
+        updated_at: new Date(),
+      });
+
+      // Update visit schedule if exists
+      const schedule = await VisitSchedule.findOne({
+        where: { visit_id: id },
+      });
+
+      if (schedule) {
+        await schedule.update({
+          status: "confirmed",
+          notes: notes || "Visit confirmed by staff",
+          updated_at: new Date(),
+        });
+      }
+
+      // Fetch updated visit with associations
+      const updatedVisit = await DonationVisit.findByPk(id, {
+        include: [
+          {
+            model: Donor,
+            as: "donor",
+            include: [
+              {
+                model: User,
+                as: "user",
+                attributes: ["user_id", "email", "name", "phone"],
+              },
+              {
+                model: EhrDonor,
+                as: "ehrData",
+                attributes: ["full_name", "phone", "email"],
+              },
+            ],
+          },
+          {
+            model: MilkBank,
+            as: "bank",
+            attributes: ["bank_id", "name", "address"],
+          },
+        ],
+      });
+
+      res.json({
+        success: true,
+        message: "Visit confirmed successfully",
+        data: updatedVisit,
+      });
+    } catch (error) {
+      console.error("Confirm visit error:", error);
+      res.status(500).json({
+        error: "Failed to confirm visit",
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Reject visit (Staff action)
+   * PATCH /api/donation-visits/:id/reject
+   */
+  async rejectVisit(req, res) {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({
+          error: "Reason is required",
+        });
+      }
+
+      const visit = await DonationVisit.findByPk(id);
+
+      if (!visit) {
+        return res.status(404).json({
+          error: "Visit not found",
+        });
+      }
+
+      if (visit.status !== "scheduled") {
+        return res.status(400).json({
+          error: "Invalid status",
+          message: "Only scheduled visits can be rejected",
+        });
+      }
+
+      // Update visit status to cancelled
+      await visit.update({
+        status: "cancelled",
+        health_note: reason,
+        updated_at: new Date(),
+      });
+
+      // Update visit schedule if exists
+      const schedule = await VisitSchedule.findOne({
+        where: { visit_id: id },
+      });
+
+      if (schedule) {
+        await schedule.update({
+          status: "rejected",
+          notes: reason,
+          updated_at: new Date(),
+        });
+      }
+
+      // Fetch updated visit with associations
+      const updatedVisit = await DonationVisit.findByPk(id, {
+        include: [
+          {
+            model: Donor,
+            as: "donor",
+            include: [
+              {
+                model: User,
+                as: "user",
+                attributes: ["user_id", "email", "name", "phone"],
+              },
+              {
+                model: EhrDonor,
+                as: "ehrData",
+                attributes: ["full_name", "phone", "email"],
+              },
+            ],
+          },
+          {
+            model: MilkBank,
+            as: "bank",
+            attributes: ["bank_id", "name", "address"],
+          },
+        ],
+      });
+
+      res.json({
+        success: true,
+        message: "Visit rejected successfully",
+        data: updatedVisit,
+      });
+    } catch (error) {
+      console.error("Reject visit error:", error);
+      res.status(500).json({
+        error: "Failed to reject visit",
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Get pending visits for staff to review
+   * GET /api/donation-visits/pending
+   */
+  async getPendingVisits(req, res) {
+    try {
+      const { page = 1, limit = 20, bank_id } = req.query;
+      const offset = (page - 1) * limit;
+
+      const where = {
+        status: "scheduled",
+        scheduled_start: {
+          [Op.gte]: new Date(), // Future visits only
+        },
+      };
+
+      if (bank_id) {
+        where.bank_id = bank_id;
+      }
+
+      const { count, rows: visits } = await DonationVisit.findAndCountAll({
+        where,
+        include: [
+          {
+            model: Donor,
+            as: "donor",
+            include: [
+              {
+                model: User,
+                as: "user",
+                attributes: ["user_id", "email", "name", "phone"],
+              },
+              {
+                model: EhrDonor,
+                as: "ehrData",
+                attributes: ["full_name", "phone", "email", "address"],
+              },
+            ],
+          },
+          {
+            model: MilkBank,
+            as: "bank",
+            attributes: ["bank_id", "name", "address"],
+          },
+          {
+            model: VisitSchedule,
+            as: "schedule",
+          },
+        ],
+        order: [["scheduled_start", "ASC"]],
+        limit: parseInt(limit),
+        offset,
+      });
+
+      res.json({
+        success: true,
+        message: "Pending visits retrieved successfully",
+        data: {
+          visits,
+          pagination: {
+            total: count,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil(count / limit),
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Get pending visits error:", error);
+      res.status(500).json({
+        error: "Failed to retrieve pending visits",
+        message: error.message,
+      });
+    }
+  }
 }
 
 module.exports = new DonationVisitController();

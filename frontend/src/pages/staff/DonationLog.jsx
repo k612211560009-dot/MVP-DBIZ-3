@@ -29,25 +29,33 @@ const DonationLog = () => {
   const fetchDonations = async () => {
     try {
       const response = await api.get("/staff/donations");
-      setDonations(response.data);
+      setDonations(response.data.data?.donations || []);
     } catch (error) {
       console.error("Error fetching donations:", error);
       // Use mock data as fallback
-      setDonations(getSafeDonations());
+      setDonations(getSafeDonations() || []);
     } finally {
       setLoading(false);
     }
   };
 
   const applyFilters = () => {
+    // Safety check: ensure donations is an array
+    if (!Array.isArray(donations)) {
+      setFilteredDonations([]);
+      return;
+    }
+
     let filtered = [...donations];
 
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (donation) =>
-          donation.donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          donation.id.toString().includes(searchTerm)
+          donation.donorName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          donation.id?.toString().includes(searchTerm)
       );
     }
 

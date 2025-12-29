@@ -73,25 +73,25 @@ export function DonationLog() {
     },
     {
       key: "points",
-      header: "Điểm",
+      header: "Points",
       render: (donation: any) => (
-        <Badge variant="default">{donation.points} điểm</Badge>
+        <Badge variant="default">{donation.points} points</Badge>
       ),
     },
     {
       key: "healthStatus",
-      header: "Sức khỏe",
+      header: "Health Status",
       render: (donation: any) => (
         <Badge
           variant={donation.healthStatus === "good" ? "default" : "destructive"}
         >
-          {donation.healthStatus === "good" ? "Tốt" : "Không tốt"}
+          {donation.healthStatus === "good" ? "Good" : "Not Good"}
         </Badge>
       ),
     },
     {
       key: "notes",
-      header: "Ghi chú",
+      header: "Notes",
       render: (donation: any) => (
         <span className="text-muted-foreground">{donation.notes || "-"}</span>
       ),
@@ -103,14 +103,12 @@ export function DonationLog() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1>Nhật ký hiến sữa</h1>
-          <p className="text-muted-foreground">
-            Theo dõi tất cả các lần hiến sữa
-          </p>
+          <h1>Donation Log</h1>
+          <p className="text-muted-foreground">Track all milk donations</p>
         </div>
         <Button>
           <Download className="h-4 w-4 mr-2" />
-          Xuất CSV
+          Export CSV
         </Button>
       </div>
 
@@ -176,13 +174,13 @@ export function DonationLog() {
         </Select>
         <Input
           type="date"
-          placeholder="Từ ngày"
+          placeholder="From date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
         />
         <Input
           type="date"
-          placeholder="Đến ngày"
+          placeholder="To date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
         />
@@ -192,7 +190,7 @@ export function DonationLog() {
       <DataTable
         data={filteredDonations}
         columns={columns}
-        emptyMessage="Không có dữ liệu hiến sữa"
+        emptyMessage="No donation data"
       />
     </div>
   );

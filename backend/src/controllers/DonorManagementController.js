@@ -9,6 +9,7 @@ const {
   AuditLog,
 } = require("../models");
 const { Op } = require("sequelize");
+const ScheduleGeneratorService = require("../services/ScheduleGeneratorService");
 
 /**
  * Donor Management Controller for Staff
@@ -126,8 +127,8 @@ class DonorManagementController {
             model: DonationVisit,
             as: "donations",
             limit: 10,
-            order: [["donation_date", "DESC"]],
-            attributes: ["visit_id", "donation_date", "volume_ml", "status"],
+            order: [["scheduled_start", "DESC"]],
+            attributes: ["visit_id", "scheduled_start", "volume_ml", "status"],
           },
           {
             model: Appointment,
@@ -209,6 +210,32 @@ class DonorManagementController {
         updated_at: new Date(),
       });
 
+      // 🎯 AUTO-SCHEDULE: When donor is approved, generate donation schedules
+      let scheduleResult = null;
+      if (
+        status === "approved" &&
+        oldStatus !== "approved" &&
+        donor.screening_status === "approved" &&
+        donor.director_status === "approved"
+      ) {
+        try {
+          console.log(
+            `🔄 Auto-generating schedules for approved donor ${id}...`
+          );
+          scheduleResult = await ScheduleGeneratorService.onDonorApproved(id);
+          if (scheduleResult.success) {
+            console.log(
+              `✅ Auto-schedule: ${scheduleResult.message} - ${scheduleResult.visits.length} visits`
+            );
+          } else {
+            console.log(`⚠️ Auto-schedule: ${scheduleResult.message}`);
+          }
+        } catch (scheduleError) {
+          console.error("Error auto-generating schedules:", scheduleError);
+          // Continue even if schedule generation fails
+        }
+      }
+
       // Create audit log
       await AuditLog.create({
         user_id: req.user.user_id,
@@ -219,6 +246,11 @@ class DonorManagementController {
           old_status: oldStatus,
           new_status: status,
           notes,
+          auto_schedule: scheduleResult
+            ? scheduleResult.success
+              ? "generated"
+              : "skipped"
+            : null,
         }),
         ip_address: req.ip,
       });
@@ -230,6 +262,15 @@ class DonorManagementController {
           full_name: donor.full_name,
           old_status: oldStatus,
           new_status: status,
+          auto_schedule: scheduleResult
+            ? {
+                generated: scheduleResult.success,
+                message: scheduleResult.message,
+                visits_created: scheduleResult.visits
+                  ? scheduleResult.visits.length
+                  : 0,
+              }
+            : null,
         },
       });
     } catch (error) {
@@ -264,21 +305,21 @@ class DonorManagementController {
       if (type === "all" || type === "donations") {
         const donations = await DonationVisit.findAll({
           where: { donor_id: id },
-          order: [["donation_date", "DESC"]],
+          order: [["scheduled_start", "DESC"]],
           limit: parseInt(limit),
           attributes: [
             "visit_id",
-            "donation_date",
+            "scheduled_start",
             "volume_ml",
             "status",
-            "notes",
+            "quality_note",
           ],
         });
 
         donations.forEach((d) => {
           history.push({
             type: "donation",
-            date: d.donation_date,
+            date: d.scheduled_start,
             description: `Hiến ${d.volume_ml}ml sữa`,
             status: d.status,
             details: d,

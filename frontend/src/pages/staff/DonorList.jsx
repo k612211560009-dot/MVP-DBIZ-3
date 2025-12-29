@@ -20,24 +20,31 @@ const DonorList = () => {
   const fetchDonors = async () => {
     try {
       const response = await api.get("/staff/donors");
-      setDonors(response.data);
+      setDonors(response.data.data?.donors || []);
     } catch (error) {
       console.error("Error fetching donors:", error);
+      setDonors([]);
     } finally {
       setLoading(false);
     }
   };
 
   const applyFilters = () => {
+    // Safety check: ensure donors is an array
+    if (!Array.isArray(donors)) {
+      setFilteredDonors([]);
+      return;
+    }
+
     let filtered = [...donors];
 
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (donor) =>
-          donor.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          donor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          donor.phoneNumber.includes(searchTerm)
+          donor.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          donor.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          donor.phoneNumber?.includes(searchTerm)
       );
     }
 

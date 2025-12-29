@@ -19,7 +19,7 @@ const DirectorLayout = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const navigation = [

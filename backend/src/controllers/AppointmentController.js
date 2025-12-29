@@ -4,9 +4,12 @@ const {
   User,
   MilkBank,
   ScreeningSession,
-  DonationRecord,
+  DonationVisit,
 } = require("../models");
 const { Op } = require("sequelize");
+const MeetingLinkService = require("../services/MeetingLinkService");
+const NotificationController = require("./NotificationController");
+const { v4: uuidv4 } = require("uuid");
 
 /**
  * Appointment Controller
@@ -35,6 +38,16 @@ class AppointmentController {
       // Build where clause for filtering
       const whereClause = {};
 
+      // If user is a donor, only show their appointments
+      if (req.user.role === "donor") {
+        whereClause.donor_id = req.user.user_id;
+      } else {
+        // For staff, allow filtering by donor_id
+        if (donor_id) {
+          whereClause.donor_id = donor_id;
+        }
+      }
+
       if (date) {
         const startDate = new Date(date);
         const endDate = new Date(date);
@@ -56,10 +69,6 @@ class AppointmentController {
 
       if (type && type !== "all") {
         whereClause.appointment_type = type;
-      }
-
-      if (donor_id) {
-        whereClause.donor_id = donor_id;
       }
 
       const appointments = await Appointment.findAndCountAll({
@@ -84,7 +93,7 @@ class AppointmentController {
           {
             model: MilkBank,
             as: "milkBank",
-            attributes: ["bank_id", "name", "location"],
+            attributes: ["bank_id", "name", "address", "province"],
           },
         ],
         order: [[sortBy, sortOrder.toUpperCase()]],
@@ -149,8 +158,8 @@ class AppointmentController {
             as: "screeningSessions",
           },
           {
-            model: DonationRecord,
-            as: "donationRecords",
+            model: DonationVisit,
+            as: "donations",
           },
         ],
       });
@@ -170,6 +179,58 @@ class AppointmentController {
       console.error("Get appointment by ID error:", error);
       res.status(500).json({
         error: "Failed to retrieve appointment",
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Get upcoming appointments for a donor
+   * GET /api/appointments/upcoming
+   */
+  async getUpcomingAppointments(req, res) {
+    try {
+      const donorId =
+        req.user.role === "donor" ? req.user.user_id : req.params.id;
+
+      // Check if donor exists
+      const donor = await Donor.findByPk(donorId);
+      if (!donor) {
+        return res.status(400).json({
+          error: "Donor profile not found",
+          message: "Please complete your registration first",
+        });
+      }
+
+      const appointments = await Appointment.findAll({
+        where: {
+          donor_id: donorId,
+          appointment_date: {
+            [Op.gte]: new Date(),
+          },
+          status: {
+            [Op.in]: ["scheduled", "confirmed"],
+          },
+        },
+        include: [
+          {
+            model: MilkBank,
+            as: "milkBank",
+            attributes: ["bank_id", "name", "address", "province"],
+          },
+        ],
+        order: [["appointment_date", "ASC"]],
+        limit: 5,
+      });
+
+      res.json({
+        message: "Upcoming appointments retrieved successfully",
+        data: { appointments },
+      });
+    } catch (error) {
+      console.error("Get upcoming appointments error:", error);
+      res.status(500).json({
+        error: "Failed to retrieve appointments",
         message: error.message,
       });
     }
@@ -238,6 +299,17 @@ class AppointmentController {
         created_by: req.user.user_id,
       });
 
+      // Auto-generate meeting link for screening appointments
+      if (appointment_type === "screening") {
+        const meetingLink = MeetingLinkService.generateMeetLink({
+          appointmentId: appointment.appointment_id,
+          donorEmail: donor.user?.email || "donor@milkbank.com",
+          appointmentDate: new Date(appointment_date),
+        });
+
+        await appointment.update({ meeting_link: meetingLink });
+      }
+
       // Fetch the created appointment with includes
       const newAppointment = await Appointment.findByPk(
         appointment.appointment_id,
@@ -275,6 +347,146 @@ class AppointmentController {
       console.error("Create appointment error:", error);
       res.status(500).json({
         error: "Failed to create appointment",
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Book appointment (for donors)
+   * POST /api/appointments/book
+   */
+  async bookAppointment(req, res) {
+    try {
+      // Log incoming request for debugging
+      console.log("📋 Book appointment request:", {
+        user: req.user,
+        body: req.body,
+      });
+
+      const donor_id = req.user.user_id;
+      const { date, time, type = "donation", notes } = req.body;
+
+      if (!date || !time) {
+        return res.status(400).json({
+          error: "Missing required fields",
+          message: "Date and time are required",
+        });
+      }
+
+      // Check if donor exists
+      console.log("🔍 Looking up donor with ID:", donor_id);
+      const donor = await Donor.findByPk(donor_id, {
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["user_id", "email", "name", "phone"],
+          },
+        ],
+      });
+
+      console.log("👤 Donor found:", donor ? "Yes" : "No");
+
+      if (!donor) {
+        return res.status(404).json({
+          error: "Donor not found",
+          message: "Please complete your registration first",
+        });
+      }
+
+      // Use donor's home bank or get default bank
+      let bank_id = donor.home_bank_id;
+
+      // If donor doesn't have a home bank, get the first available bank
+      if (!bank_id) {
+        const defaultBank = await MilkBank.findOne({
+          attributes: ["bank_id"],
+        });
+
+        if (!defaultBank) {
+          return res.status(400).json({
+            error: "No milk bank available",
+            message: "Please contact support to set up your milk bank",
+          });
+        }
+
+        bank_id = defaultBank.bank_id;
+        console.log("📍 Using default bank:", bank_id);
+      }
+
+      // Parse date and time
+      const appointmentDate = new Date(date);
+
+      // Check for conflicting appointments
+      const existingAppointment = await Appointment.findOne({
+        where: {
+          donor_id,
+          appointment_date: appointmentDate,
+          time_slot: time,
+          status: {
+            [Op.in]: ["scheduled", "confirmed", "in_progress"],
+          },
+        },
+      });
+
+      if (existingAppointment) {
+        return res.status(409).json({
+          error: "Appointment conflict",
+          message: "You already have an appointment at this time",
+        });
+      }
+
+      // Create appointment
+      const appointment = await Appointment.create({
+        appointment_id: uuidv4(),
+        donor_id,
+        bank_id,
+        appointment_type: type,
+        appointment_date: appointmentDate,
+        time_slot: time,
+        status: "scheduled",
+        notes,
+        created_by: donor_id,
+      });
+
+      // Create notification for staff
+      try {
+        await NotificationController.createNotification({
+          type: "new_appointment",
+          title: "New Appointment Booked",
+          message: `${
+            donor.user?.name || "Donor"
+          } has booked a ${type} appointment for ${date} at ${time}`,
+          priority: "medium",
+          related_donor_id: donor_id,
+          related_entity_type: "appointment",
+          related_entity_id: appointment.appointment_id,
+          metadata: {
+            donor_name: donor.user?.name,
+            donor_email: donor.user?.email,
+            donor_phone: donor.user?.phone,
+            appointment_type: type,
+            appointment_date: date,
+            appointment_time: time,
+          },
+        });
+        console.log(
+          `🔔 Notification created for new appointment by ${donor.user?.name}`
+        );
+      } catch (notifError) {
+        console.error("Error creating notification:", notifError);
+        // Don't fail booking if notification creation fails
+      }
+
+      res.status(201).json({
+        message: "Appointment booked successfully!",
+        data: { appointment },
+      });
+    } catch (error) {
+      console.error("Book appointment error:", error);
+      res.status(500).json({
+        error: "Failed to book appointment",
         message: error.message,
       });
     }
@@ -392,6 +604,61 @@ class AppointmentController {
       }
 
       await appointment.update(updateData);
+
+      // Auto-create donation visit when appointment is confirmed (for donation type)
+      if (
+        status === "confirmed" &&
+        appointment.appointment_type === "donation"
+      ) {
+        try {
+          const { v4: uuidv4 } = require("uuid");
+          const VisitSchedule = require("../models").VisitSchedule;
+
+          // Check if visit already exists
+          const existingVisit = await DonationVisit.findOne({
+            where: {
+              donor_id: appointment.donor_id,
+              scheduled_start: appointment.appointment_date,
+              status: ["scheduled", "confirmed", "in_progress"],
+            },
+          });
+
+          if (!existingVisit) {
+            // Calculate scheduled_end (appointment_date + 1 hour)
+            const scheduledEnd = new Date(appointment.appointment_date);
+            scheduledEnd.setHours(scheduledEnd.getHours() + 1);
+
+            // Create donation visit
+            const visit = await DonationVisit.create({
+              visit_id: uuidv4(),
+              donor_id: appointment.donor_id,
+              bank_id: appointment.bank_id || 1, // Default bank if not set
+              scheduled_start: appointment.appointment_date,
+              scheduled_end: scheduledEnd,
+              origin: "staff",
+              status: "scheduled",
+              recorded_by: req.user?.user_id || null,
+            });
+
+            // Create visit schedule record
+            await VisitSchedule.create({
+              schedule_id: uuidv4(),
+              visit_id: visit.visit_id,
+              proposed_time: appointment.appointment_date,
+              proposed_by: req.user?.user_id || null,
+              status: "accepted",
+              notes: `Auto-created from appointment ${appointment.appointment_id}`,
+            });
+
+            console.log(
+              `✅ Auto-created donation visit ${visit.visit_id} for confirmed appointment ${id}`
+            );
+          }
+        } catch (visitError) {
+          console.error("Error auto-creating donation visit:", visitError);
+          // Don't fail the appointment confirmation if visit creation fails
+        }
+      }
 
       res.json({
         message: "Appointment status updated successfully",

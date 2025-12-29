@@ -42,17 +42,17 @@ export function HomePage({ onNavigate, onAuthModal }) {
   const PROCESS_STEPS = [
     {
       step: 1,
-      title: "Đăng ký trực tuyến",
+      title: "Online Registration",
       description:
-        "Điền form đăng ký với thông tin cá nhân và trả lời các câu hỏi sàng lọc sức khỏe. Chỉ mất 5-10 phút.",
+        "Fill out the registration form with personal information and answer health screening questions. Takes only 5-10 minutes.",
       icon: Users,
       color: "bg-blue-50 text-blue-600",
     },
     {
       step: 2,
-      title: "Sàng lọc & Duyệt hồ sơ",
+      title: "Screening & Approval",
       description:
-        "Hệ thống tự động kiểm tra tiêu chí. Nếu đạt, bạn sẽ nhận mã người hiến ngay lập tức.",
+        "System automatically checks criteria. If qualified, you will receive your donor ID immediately.",
       icon: CheckCircle2,
       color: "bg-green-50 text-green-600",
     },

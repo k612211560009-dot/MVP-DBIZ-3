@@ -56,13 +56,11 @@ export function AuthModal({ mode, isOpen, onClose, onLogin, onSwitchMode }) {
         onClose();
       } else {
         setMessage(
-          `❌ ${mode === "login" ? "Đăng nhập" : "Đăng ký"} thất bại: ${
-            data.message
-          }`
+          `❌ ${mode === "login" ? "Login" : "Sign up"} failed: ${data.message}`
         );
       }
     } catch (err) {
-      setMessage(`❌ Lỗi: ${err.message}`);
+      setMessage(`❌ Error: ${err.message}`);
     }
     setIsLoading(false);
   };
@@ -90,7 +88,7 @@ export function AuthModal({ mode, isOpen, onClose, onLogin, onSwitchMode }) {
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-800">
-            {mode === "login" ? "Đăng nhập" : "Đăng ký"}
+            {mode === "login" ? "Login" : "Sign Up"}
           </h2>
           <button
             onClick={onClose}
@@ -111,7 +109,7 @@ export function AuthModal({ mode, isOpen, onClose, onLogin, onSwitchMode }) {
                   : "text-gray-600 hover:text-gray-800"
               }`}
             >
-              Đăng nhập
+              Login
             </button>
             <button
               onClick={() => onSwitchMode("signup")}
@@ -121,7 +119,7 @@ export function AuthModal({ mode, isOpen, onClose, onLogin, onSwitchMode }) {
                   : "text-gray-600 hover:text-gray-800"
               }`}
             >
-              Đăng ký
+              Sign Up
             </button>
           </div>
 

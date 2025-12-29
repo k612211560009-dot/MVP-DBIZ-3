@@ -65,10 +65,10 @@ export function ScreeningForm() {
 
   // Pre-filled personal info (from donor record)
   const [personalInfo, setPersonalInfo] = useState({
-    name: "Nguyễn Thị A",
+    name: "Nguyen Thi A",
     dob: "1990-05-10",
     phone: "0912345678",
-    address: "Quận 1, TP.HCM",
+    address: "District 1, HCMC",
     ehrId: "EHR-12345",
   });
 
@@ -83,12 +83,12 @@ export function ScreeningForm() {
   const [finalNotes, setFinalNotes] = useState("");
 
   const failReasonOptions = [
-    "Có bệnh truyền nhiễm",
-    "Sử dụng thuốc kháng sinh",
-    "Hút thuốc/uống rượu",
-    "Tiền sử bệnh lý nghiêm trọng",
-    "Không đủ điều kiện sức khỏe",
-    "Lý do khác",
+    "Has infectious disease",
+    "Using antibiotics",
+    "Smoking/drinking alcohol",
+    "Serious medical history",
+    "Does not meet health requirements",
+    "Other reason",
   ];
 
   const handleAnswerChange = (questionId: string, answer: string) => {
@@ -125,17 +125,17 @@ export function ScreeningForm() {
       (q) => answers[q.id]?.answer
     );
     if (!allQuestionsAnswered) {
-      toast.error("Vui lòng trả lời tất cả các câu hỏi");
+      toast.error("Please answer all questions");
       return;
     }
 
     if (!result) {
-      toast.error("Vui lòng chọn kết quả sàng lọc");
+      toast.error("Please select screening result");
       return;
     }
 
     if (result === "fail" && failReasons.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một lý do từ chối");
+      toast.error("Please select at least one reason for rejection");
       return;
     }
 
@@ -143,8 +143,8 @@ export function ScreeningForm() {
 
     // Simulate API call
     setTimeout(() => {
-      toast.success("Phiếu sàng lọc đã được lưu thành công", {
-        description: "Thông báo đã được gửi đến donor",
+      toast.success("Screening form has been saved successfully", {
+        description: "Notification has been sent to donor",
       });
       setIsSaving(false);
       navigate("/appointments");
@@ -160,9 +160,9 @@ export function ScreeningForm() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1>Phiếu sàng lọc Donor</h1>
+        <h1>Donor Screening Form</h1>
         <p className="text-muted-foreground">
-          Điền thông tin sàng lọc cho mẹ hiến sữa
+          Fill in screening information for milk donor
         </p>
       </div>
 
@@ -170,9 +170,9 @@ export function ScreeningForm() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
-            <span>Tiến độ hoàn thành</span>
+            <span>Completion Progress</span>
             <span>
-              {completedQuestions}/{screeningQuestions.length} câu hỏi
+              {completedQuestions}/{screeningQuestions.length} questions
             </span>
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -187,11 +187,11 @@ export function ScreeningForm() {
       {/* Personal Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Thông tin cá nhân</CardTitle>
+          <CardTitle>Personal Information</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Họ và tên *</Label>
+            <Label htmlFor="name">Full Name *</Label>
             <Input
               id="name"
               value={personalInfo.name}
@@ -201,7 +201,7 @@ export function ScreeningForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dob">Ngày sinh *</Label>
+            <Label htmlFor="dob">Date of Birth *</Label>
             <Input
               id="dob"
               type="date"
@@ -212,7 +212,7 @@ export function ScreeningForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Số điện thoại *</Label>
+            <Label htmlFor="phone">Phone Number *</Label>
             <Input
               id="phone"
               value={personalInfo.phone}
@@ -232,7 +232,7 @@ export function ScreeningForm() {
             />
           </div>
           <div className="space-y-2 col-span-2">
-            <Label htmlFor="address">Địa chỉ *</Label>
+            <Label htmlFor="address">Address *</Label>
             <Input
               id="address"
               value={personalInfo.address}
@@ -247,7 +247,7 @@ export function ScreeningForm() {
       {/* Screening Questions */}
       <Card>
         <CardHeader>
-          <CardTitle>Câu hỏi sàng lọc</CardTitle>
+          <CardTitle>Screening Questions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {screeningQuestions.map((question, index) => (
@@ -282,7 +282,7 @@ export function ScreeningForm() {
                     htmlFor={`${question.id}-yes`}
                     className="cursor-pointer"
                   >
-                    Có
+                    Yes
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -291,12 +291,12 @@ export function ScreeningForm() {
                     htmlFor={`${question.id}-no`}
                     className="cursor-pointer"
                   >
-                    Không
+                    No
                   </Label>
                 </div>
               </RadioGroup>
               <Textarea
-                placeholder="Ghi chú (nếu có)..."
+                placeholder="Notes (optional)..."
                 value={answers[question.id]?.comment || ""}
                 onChange={(e) =>
                   handleCommentChange(question.id, e.target.value)
@@ -312,29 +312,29 @@ export function ScreeningForm() {
       {/* Assessment Result */}
       <Card>
         <CardHeader>
-          <CardTitle>Kết quả đánh giá</CardTitle>
+          <CardTitle>Assessment Result</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Kết quả sàng lọc *</Label>
+            <Label>Screening Result *</Label>
             <Select
               value={result}
               onValueChange={(value: any) => setResult(value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Chọn kết quả" />
+                <SelectValue placeholder="Select result" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pass">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    Đạt
+                    Pass
                   </div>
                 </SelectItem>
                 <SelectItem value="fail">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-destructive" />
-                    Không đạt
+                    Fail
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -343,7 +343,7 @@ export function ScreeningForm() {
 
           {result === "fail" && (
             <div className="space-y-2">
-              <Label>Lý do không đạt *</Label>
+              <Label>Reason for Failure *</Label>
               <div className="flex flex-wrap gap-2">
                 {failReasonOptions.map((reason) => (
                   <Badge
@@ -362,10 +362,10 @@ export function ScreeningForm() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="finalNotes">Ghi chú tổng quan</Label>
+            <Label htmlFor="finalNotes">General Notes</Label>
             <Textarea
               id="finalNotes"
-              placeholder="Nhập ghi chú chung về quá trình sàng lọc..."
+              placeholder="Enter general notes about the screening process..."
               value={finalNotes}
               onChange={(e) => setFinalNotes(e.target.value)}
               rows={4}
@@ -377,10 +377,10 @@ export function ScreeningForm() {
       {/* Actions */}
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={() => navigate("/appointments")}>
-          Hủy
+          Cancel
         </Button>
         <Button onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? "Đang lưu..." : "Lưu phiếu sàng lọc"}
+          {isSaving ? "Saving..." : "Save Screening Form"}
         </Button>
       </div>
     </div>

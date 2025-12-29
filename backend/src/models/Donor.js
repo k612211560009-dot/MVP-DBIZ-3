@@ -103,6 +103,12 @@ module.exports = (sequelize) => {
       as: "visits",
     });
 
+    // Donor has many visit schedules (recurring donation schedules)
+    Donor.hasMany(models.VisitSchedule, {
+      foreignKey: "donor_id",
+      as: "visitSchedules",
+    });
+
     // Legacy associations (keep if old models still exist)
     if (models.Appointment) {
       Donor.hasMany(models.Appointment, {
@@ -125,10 +131,10 @@ module.exports = (sequelize) => {
       });
     }
 
-    if (models.DonationRecord) {
-      Donor.hasMany(models.DonationRecord, {
+    if (models.DonationVisit) {
+      Donor.hasMany(models.DonationVisit, {
         foreignKey: "donor_id",
-        as: "donationRecords",
+        as: "donations",
       });
     }
 

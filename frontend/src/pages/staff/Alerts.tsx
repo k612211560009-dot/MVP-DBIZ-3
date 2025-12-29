@@ -1,29 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DataTable } from "../../components/DataTable";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { CheckCircle, Mail, UserPlus, AlertTriangle } from "lucide-react";
-import { getSafeAlerts } from "../../lib/safe-mock-data";
 import { toast } from "sonner";
+import { api } from "../../services/api";
 
 export function Alerts() {
-  const [statusFilter, setStatusFilter] = useState("active");
+  const [statusFilter, setStatusFilter] = useState("unread");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredAlerts = getSafeAlerts().filter((alert) => {
-    const matchesStatus =
-      statusFilter === "all" || alert.status === statusFilter;
-    const matchesPriority =
-      priorityFilter === "all" || alert.priority === priorityFilter;
-    return matchesStatus && matchesPriority;
-  });
+  useEffect(() => {
+    fetchNotifications();
+  }, [statusFilter, priorityFilter]);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const params: any = {};
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (priorityFilter !== "all") params.priority = priorityFilter;
+
+      const response = await api.get("/notifications", { params });
+      setNotifications(response.data.data?.notifications || []);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      toast.error("Failed to load notifications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredAlerts = notifications;
 
   const getPriorityBadge = (priority: string) => {
     const variants: Record<string, any> = {
-      high: { variant: "destructive", label: "Cao" },
-      medium: { variant: "secondary", label: "Trung bình" },
-      low: { variant: "outline", label: "Thấp" },
+      high: { variant: "destructive", label: "High" },
+      medium: { variant: "secondary", label: "Medium" },
+      low: { variant: "outline", label: "Low" },
     };
     const config = variants[priority] || {
       variant: "secondary",
@@ -34,77 +51,98 @@ export function Alerts() {
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      test_expiring: "Xét nghiệm hết hạn",
-      screening_incomplete: "Sàng lọc chưa xong",
-      unsigned_consent: "Chưa ký cam kết",
-      payment_pending: "Chờ thanh toán",
+      new_donor_registration: "New Donor Registration",
+      new_appointment: "New Appointment",
+      test_expiring: "Test Expiring",
+      screening_incomplete: "Screening Incomplete",
+      unsigned_consent: "Consent Unsigned",
+      payment_pending: "Payment Pending",
     };
     return labels[type] || type;
   };
 
-  const handleMarkResolved = (alertId: string) => {
-    toast.success("Đã đánh dấu cảnh báo đã xử lý");
+  const handleMarkResolved = async (notificationId: string) => {
+    try {
+      await api.patch(`/notifications/${notificationId}/status`, {
+        status: "resolved",
+      });
+      toast.success("Notification marked as resolved");
+      fetchNotifications();
+    } catch (error) {
+      toast.error("Failed to update notification");
+    }
   };
 
-  const handleSendReminder = (alert: any) => {
-    toast.success(`Đã gửi nhắc nhở đến ${alert.donorName}`);
+  const handleSendReminder = (notification: any) => {
+    const donorName = notification.metadata?.donor_name || "Donor";
+    toast.success(`Reminder sent to ${donorName}`);
   };
 
   const columns = [
     {
       key: "priority",
-      header: "Mức độ",
-      render: (alert: any) => getPriorityBadge(alert.priority),
+      header: "Priority",
+      render: (notif: any) => getPriorityBadge(notif.priority),
     },
     {
       key: "type",
-      header: "Loại",
-      render: (alert: any) => getTypeLabel(alert.type),
+      header: "Type",
+      render: (notif: any) => getTypeLabel(notif.type),
     },
     {
       key: "donor",
       header: "Donor",
-      render: (alert: any) => (
+      render: (notif: any) => (
         <div>
-          <p>{alert.donorName}</p>
-          <p className="text-muted-foreground">{alert.donorId}</p>
+          <p>{notif.metadata?.donor_name || "N/A"}</p>
+          <p className="text-sm text-muted-foreground">
+            {notif.metadata?.donor_email || ""}
+          </p>
         </div>
       ),
     },
     {
-      key: "message",
-      header: "Thông báo",
+      key: "title",
+      header: "Title",
     },
     {
-      key: "createdAt",
-      header: "Ngày tạo",
+      key: "message",
+      header: "Message",
+    },
+    {
+      key: "created_at",
+      header: "Created Date",
+      render: (notif: any) =>
+        new Date(notif.created_at).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
     },
     {
       key: "actions",
-      header: "Thao tác",
-      render: (alert: any) => (
+      header: "Actions",
+      render: (notif: any) => (
         <div className="flex gap-2">
-          {alert.status === "active" && (
+          {notif.status !== "resolved" && (
             <>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleMarkResolved(alert.id)}
+                onClick={() => handleMarkResolved(notif.notification_id)}
               >
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Đã xử lý
+                Resolved
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleSendReminder(alert)}
+                onClick={() => handleSendReminder(notif)}
               >
                 <Mail className="h-4 w-4 mr-1" />
-                Nhắc nhở
-              </Button>
-              <Button variant="outline" size="sm">
-                <UserPlus className="h-4 w-4 mr-1" />
-                Giao việc
+                Send Reminder
               </Button>
             </>
           )}
@@ -113,23 +151,23 @@ export function Alerts() {
     },
   ];
 
-  const activeCount = getSafeAlerts().filter(
-    (a) => a.status === "active"
+  const unreadCount = notifications.filter(
+    (n: any) => n.status === "unread"
   ).length;
-  const highPriorityCount = getSafeAlerts().filter(
-    (a) => a.status === "active" && a.priority === "high"
+  const highPriorityCount = notifications.filter(
+    (n: any) => n.status === "unread" && n.priority === "high"
   ).length;
-  const resolvedCount = getSafeAlerts().filter(
-    (a) => a.status === "resolved"
+  const resolvedCount = notifications.filter(
+    (n: any) => n.status === "resolved"
   ).length;
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1>Quản lý cảnh báo</h1>
+        <h1>Alert Management</h1>
         <p className="text-muted-foreground">
-          Theo dõi và xử lý các cảnh báo hệ thống
+          Monitor and handle system alerts
         </p>
       </div>
 
@@ -139,8 +177,8 @@ export function Alerts() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Cảnh báo đang hoạt động</p>
-                <h2>{activeCount}</h2>
+                <p className="text-muted-foreground">Unread Notifications</p>
+                <h2>{unreadCount}</h2>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
             </div>
@@ -150,7 +188,7 @@ export function Alerts() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Ưu tiên cao</p>
+                <p className="text-muted-foreground">High Priority</p>
                 <h2>{highPriorityCount}</h2>
               </div>
               <AlertTriangle className="h-8 w-8 text-destructive" />
@@ -161,7 +199,7 @@ export function Alerts() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Đã xử lý</p>
+                <p className="text-muted-foreground">Resolved</p>
                 <h2>{resolvedCount}</h2>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -174,22 +212,28 @@ export function Alerts() {
       <div className="flex gap-4">
         <div className="flex gap-2">
           <Button
-            variant={statusFilter === "active" ? "default" : "outline"}
-            onClick={() => setStatusFilter("active")}
+            variant={statusFilter === "unread" ? "default" : "outline"}
+            onClick={() => setStatusFilter("unread")}
           >
-            Đang hoạt động
+            Unread
+          </Button>
+          <Button
+            variant={statusFilter === "read" ? "default" : "outline"}
+            onClick={() => setStatusFilter("read")}
+          >
+            Read
           </Button>
           <Button
             variant={statusFilter === "resolved" ? "default" : "outline"}
             onClick={() => setStatusFilter("resolved")}
           >
-            Đã xử lý
+            Resolved
           </Button>
           <Button
             variant={statusFilter === "all" ? "default" : "outline"}
             onClick={() => setStatusFilter("all")}
           >
-            Tất cả
+            All
           </Button>
         </div>
         <div className="flex gap-2">
@@ -199,7 +243,7 @@ export function Alerts() {
               setPriorityFilter(priorityFilter === "high" ? "all" : "high")
             }
           >
-            Cao
+            High
           </Button>
           <Button
             variant={priorityFilter === "medium" ? "default" : "outline"}
@@ -207,7 +251,7 @@ export function Alerts() {
               setPriorityFilter(priorityFilter === "medium" ? "all" : "medium")
             }
           >
-            Trung bình
+            Medium
           </Button>
           <Button
             variant={priorityFilter === "low" ? "secondary" : "outline"}
@@ -215,7 +259,7 @@ export function Alerts() {
               setPriorityFilter(priorityFilter === "low" ? "all" : "low")
             }
           >
-            Thấp
+            Low
           </Button>
         </div>
       </div>
@@ -224,7 +268,7 @@ export function Alerts() {
       <DataTable
         data={filteredAlerts}
         columns={columns}
-        emptyMessage="Không có cảnh báo nào"
+        emptyMessage="No alerts found"
       />
     </div>
   );

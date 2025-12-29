@@ -1,0 +1,115 @@
+import { useEffect } from "react";
+
+const DifyChatbot = () => {
+  useEffect(() => {
+    console.log("🤖 [DifyChatbot] Component mounted, initializing...");
+
+    // 1. Cấu hình Dify Chatbot với đầy đủ options
+    window.difyChatbotConfig = {
+      token: "BcbkAB1w3sTe0mYU",
+      inputs: {
+        // Define inputs from Start node here if needed
+      },
+      systemVariables: {
+        // user_id: 'USER_ID_HERE',
+        // conversation_id: 'CONVERSATION_UUID_HERE',
+      },
+      userVariables: {
+        // avatar_url: 'USER_AVATAR_URL',
+        // name: 'USER_NAME',
+      },
+    };
+    console.log("✅ [DifyChatbot] Config set:", window.difyChatbotConfig);
+
+    // 2. Thêm custom CSS styling cho chatbot
+    const style = document.createElement("style");
+    style.textContent = `
+      #dify-chatbot-bubble-button {
+        background-color: #ec4899 !important;
+      }
+      #dify-chatbot-bubble-window {
+        width: 24rem !important;
+        height: 40rem !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // 3. Tạo thẻ script để tải file embed.min.js
+    const script = document.createElement("script");
+    script.src = "https://udify.app/embed.min.js";
+    script.id = "BcbkAB1w3sTe0mYU";
+    script.defer = true;
+
+    script.onload = () => {
+      console.log("✅ [DifyChatbot] Script loaded successfully!");
+      console.log("🔍 [DifyChatbot] Checking window.dify object:", window.dify);
+      console.log(
+        "🔍 [DifyChatbot] All window keys with 'dify':",
+        Object.keys(window).filter((k) => k.toLowerCase().includes("dify"))
+      );
+
+      // Check DOM elements at different intervals
+      [1000, 3000, 5000].forEach((delay) => {
+        setTimeout(() => {
+          const bubble = document.querySelector("#dify-chatbot-bubble-button");
+          const iframe = document.querySelector('iframe[id^="dify-chatbot"]');
+          const allIframes = document.querySelectorAll("iframe");
+          const allScripts = document.querySelectorAll(
+            'script[src*="dify"], script[src*="udify"]'
+          );
+
+          console.log(`🔍 [DifyChatbot] Check after ${delay}ms:`, {
+            bubbleFound: !!bubble,
+            iframeFound: !!iframe,
+            totalIframes: allIframes.length,
+            iframeList: Array.from(allIframes).map((f) => f.src || f.id),
+            totalDifyScripts: allScripts.length,
+            scriptList: Array.from(allScripts).map((s) => s.src),
+          });
+
+          if (bubble) {
+            console.log("✅ [DifyChatbot] Chatbot is visible!");
+          } else if (delay === 5000) {
+            console.error(
+              "❌ [DifyChatbot] Chatbot button still not found after 5s"
+            );
+            console.error("💡 Possible issues:");
+            console.error(
+              "  1. Token 'BcbkAB1w3sTe0mYU' may be invalid or expired"
+            );
+            console.error("  2. Dify service may be down");
+            console.error("  3. Network may be blocking udify.app");
+            console.error(
+              "🔍 Check Network tab in DevTools for failed requests"
+            );
+          }
+        }, delay);
+      });
+    };
+
+    script.onerror = (error) => {
+      console.error("❌ [DifyChatbot] Failed to load script:", error);
+    };
+
+    document.body.appendChild(script);
+    console.log("📌 [DifyChatbot] Script tag added to body");
+
+    // 4. Cleanup: Xóa script và style khi component bị unmount
+    return () => {
+      console.log("🧹 [DifyChatbot] Cleaning up...");
+      const existingScript = document.getElementById("BcbkAB1w3sTe0mYU");
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+      if (style.parentNode) {
+        document.head.removeChild(style);
+      }
+      delete window.difyChatbotConfig;
+    };
+  }, []);
+
+  console.log("🎨 [DifyChatbot] Rendering component");
+  return null; // Component này không cần render giao diện vì script tự tạo bong bóng chat
+};
+
+export default DifyChatbot;

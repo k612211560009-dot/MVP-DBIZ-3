@@ -11,6 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { api } from "../../services/api";
+import DifyChatbot from "../../components/DifyChatbot";
 
 const BookAppointment = () => {
   const navigate = useNavigate();
@@ -36,19 +37,35 @@ const BookAppointment = () => {
   const fetchUpcomingAppointments = async () => {
     try {
       const response = await api.get("/appointments/upcoming");
-      setUpcomingAppointments(response.data);
+      console.log("📅 Upcoming appointments response:", response.data);
+      // Handle both array and object with data property
+      const appointments = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
+      setUpcomingAppointments(appointments);
     } catch (error) {
       console.error("Error fetching appointments:", error);
+      setUpcomingAppointments([]);
     }
   };
 
   const fetchAvailableSlots = async (date) => {
     try {
       setLoading(true);
-      const response = await api.get(
-        `/appointments/available-slots?date=${date}`
-      );
-      setAvailableSlots(response.data);
+
+      // Generate fixed time slots for selection
+      const timeSlots = [
+        "08:00 - 09:00",
+        "09:00 - 10:00",
+        "10:00 - 11:00",
+        "11:00 - 12:00",
+        "13:00 - 14:00",
+        "14:00 - 15:00",
+        "15:00 - 16:00",
+        "16:00 - 17:00",
+      ];
+
+      setAvailableSlots(timeSlots);
     } catch (error) {
       console.error("Error fetching slots:", error);
       setAvailableSlots([]);
@@ -113,6 +130,7 @@ const BookAppointment = () => {
 
   return (
     <div className="space-y-6">
+      <DifyChatbot />
       {/* Header with Back Button */}
       <div className="flex items-center gap-4">
         <button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
 import { toast } from "sonner";
@@ -22,9 +22,11 @@ import {
   Activity,
   TrendingUp,
 } from "lucide-react";
+import DifyChatbot from "../../components/DifyChatbot";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,15 +44,36 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [location.state?.refresh]); // Refetch when location state changes
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
       const response = await api.get("/donors/profile");
 
-      if (response.data.hasProfile) {
-        setProfile(response.data.data);
+      console.log("Profile API response:", response.data);
+
+      if (response.data.hasProfile && response.data.data) {
+        const profileData = response.data.data;
+        setProfile({
+          donorId: profileData.donorId,
+          fullName: profileData.fullName || "N/A",
+          email: profileData.email || user?.email || "N/A",
+          phone: profileData.phone || "N/A",
+          dob: profileData.dob || "",
+          nationalId: profileData.nationalId || "N/A",
+          address: profileData.address || "",
+          province: profileData.province || "",
+          district: profileData.district || "",
+          ward: profileData.ward || "",
+          donor_status: profileData.donor_status || "pending",
+          screening_status: profileData.screening_status || "pending",
+          director_status: profileData.director_status || "pending",
+          points_total: profileData.points_total || 0,
+          consent_signed_at: profileData.consent_signed_at,
+          healthScreening: profileData.healthScreening || {},
+          statistics: profileData.statistics || {},
+        });
       } else if (user) {
         // Use data from auth context if available
         setProfile({
@@ -59,6 +82,7 @@ const Profile = () => {
           phone: user.phone || "N/A",
           donorId: user.user_id,
           donor_status: "pending",
+          points_total: 0,
         });
       }
     } catch (error) {
@@ -71,6 +95,7 @@ const Profile = () => {
           phone: user.phone || "N/A",
           donorId: user.user_id,
           donor_status: "pending",
+          points_total: 0,
         });
       } else if (error.response?.status === 404) {
         setProfile(null);
@@ -200,17 +225,20 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <DifyChatbot />
       <div className="max-w-5xl mx-auto space-y-6">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/donor/dashboard")}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          <span>Back to Dashboard</span>
+        </button>
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Back
-            </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Donor Profile

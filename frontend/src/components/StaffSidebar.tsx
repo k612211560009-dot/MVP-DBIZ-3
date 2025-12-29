@@ -26,31 +26,34 @@ import { useAuth } from "../context/AuthContext";
 
 const menuItems = [
   {
-    title: "Tổng quan",
+    title: "Overview",
     items: [
       { title: "Dashboard", icon: LayoutDashboard, url: "/staff/dashboard" },
     ],
   },
   {
-    title: "Quản lý Donor",
+    title: "Donor Management",
     items: [
-      { title: "Danh sách Donor", icon: Users, url: "/staff/donors" },
-      { title: "Lịch hẹn", icon: Calendar, url: "/staff/appointments" },
-      { title: "Sàng lọc", icon: ClipboardList, url: "/staff/screening" },
+      { title: "Donor List", icon: Users, url: "/staff/donors" },
+      { title: "Appointments", icon: Calendar, url: "/staff/appointments" },
+      {
+        title: "Visit Confirmation",
+        icon: ClipboardList,
+        url: "/staff/visit-schedules",
+      },
+      { title: "Screening", icon: ClipboardList, url: "/staff/screening" },
     ],
   },
   {
-    title: "Hiến sữa",
-    items: [
-      { title: "Nhật ký hiến sữa", icon: Droplet, url: "/staff/donations" },
-    ],
+    title: "Donations",
+    items: [{ title: "Donation Log", icon: Droplet, url: "/staff/donations" }],
   },
   {
-    title: "Y tế & Hỗ trợ",
+    title: "Medical & Support",
     items: [
-      { title: "Xét nghiệm EHR", icon: TestTube, url: "/staff/ehr-tests" },
-      { title: "Cảnh báo", icon: Bell, url: "/staff/alerts" },
-      { title: "Thanh toán", icon: CreditCard, url: "/staff/payments" },
+      { title: "EHR Tests", icon: TestTube, url: "/staff/ehr-tests" },
+      { title: "Alerts", icon: Bell, url: "/staff/alerts" },
+      { title: "Payments", icon: CreditCard, url: "/staff/payments" },
     ],
   },
 ];
@@ -62,7 +65,7 @@ export function StaffSidebar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/"); // Navigate to homepage after logout
+    navigate("/", { replace: true }); // Navigate to landing page after logout
   };
 
   return (
@@ -108,7 +111,7 @@ export function StaffSidebar() {
           className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           <LogOut className="h-4 w-4" />
-          <span>Đăng xuất</span>
+          <span>Logout</span>
         </button>
       </SidebarFooter>
     </Sidebar>

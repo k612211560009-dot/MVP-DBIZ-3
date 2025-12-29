@@ -64,15 +64,15 @@ export function EHRTests() {
 
   const getValidityBadge = (validity: string) => {
     const variants: Record<string, any> = {
-      valid: { variant: "default", label: "Còn hạn", icon: CheckCircle },
+      valid: { variant: "default", label: "Valid", icon: CheckCircle },
       expiring_soon: {
         variant: "secondary",
-        label: "Sắp hết hạn",
+        label: "Expiring Soon",
         icon: AlertTriangle,
       },
       expired: {
         variant: "destructive",
-        label: "Hết hạn",
+        label: "Expired",
         icon: AlertTriangle,
       },
     };
@@ -92,9 +92,9 @@ export function EHRTests() {
 
   const getResultBadge = (result: string) => {
     const variants: Record<string, any> = {
-      negative: { variant: "default", label: "Âm tính" },
-      positive: { variant: "destructive", label: "Dương tính" },
-      pending: { variant: "secondary", label: "Đang chờ" },
+      negative: { variant: "default", label: "Negative" },
+      positive: { variant: "destructive", label: "Positive" },
+      pending: { variant: "secondary", label: "Pending" },
     };
     const config = variants[result] || { variant: "secondary", label: result };
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -113,42 +113,42 @@ export function EHRTests() {
     },
     {
       key: "testType",
-      header: "Loại xét nghiệm",
+      header: "Test Type",
     },
     {
       key: "result",
-      header: "Kết quả",
+      header: "Result",
       render: (test: any) => getResultBadge(test.result),
     },
     {
       key: "date",
-      header: "Ngày XN",
+      header: "Test Date",
     },
     {
       key: "expiryDate",
-      header: "Ngày hết hạn",
+      header: "Expiry Date",
     },
     {
       key: "validity",
-      header: "Hiệu lực",
+      header: "Validity",
       render: (test: any) => getValidityBadge(test.validity),
     },
     {
       key: "lab",
-      header: "Phòng XN",
+      header: "Laboratory",
     },
     {
       key: "actions",
-      header: "Thao tác",
+      header: "Actions",
       render: (test: any) => (
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <CheckCircle className="h-4 w-4 mr-1" />
-            Xác thực
+            Verify
           </Button>
           <Button variant="outline" size="sm">
             <Flag className="h-4 w-4 mr-1" />
-            Đánh dấu
+            Flag
           </Button>
         </div>
       ),
@@ -168,43 +168,41 @@ export function EHRTests() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1>Theo dõi xét nghiệm EHR</h1>
+          <h1>EHR Test Tracking</h1>
           <p className="text-muted-foreground">
-            Trích xuất và xác minh kết quả xét nghiệm
+            Extract and verify test results
           </p>
         </div>
         <Button onClick={handleManualExtraction} disabled={isExtracting}>
           <RefreshCw
             className={`h-4 w-4 mr-2 ${isExtracting ? "animate-spin" : ""}`}
           />
-          {isExtracting ? "Đang trích xuất..." : "Trích xuất thủ công"}
+          {isExtracting ? "Extracting..." : "Manual Extraction"}
         </Button>
       </div>
 
       {/* Job Status */}
       <Card>
         <CardHeader>
-          <CardTitle>Trạng thái công việc tự động</CardTitle>
+          <CardTitle>Automatic Job Status</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-4 gap-4">
           <div>
-            <label className="text-muted-foreground">Lần chạy cuối</label>
+            <label className="text-muted-foreground">Last Run</label>
             <p>{jobStatus.lastRun}</p>
           </div>
           <div>
-            <label className="text-muted-foreground">Lần chạy tiếp theo</label>
+            <label className="text-muted-foreground">Next Run</label>
             <p>{jobStatus.nextRun}</p>
           </div>
           <div>
-            <label className="text-muted-foreground">Trạng thái</label>
+            <label className="text-muted-foreground">Status</label>
             <Badge variant="default">
-              {jobStatus.status === "completed" ? "Hoàn thành" : "Đang chạy"}
+              {jobStatus.status === "completed" ? "Completed" : "Running"}
             </Badge>
           </div>
           <div>
-            <label className="text-muted-foreground">
-              Số bản ghi trích xuất
-            </label>
+            <label className="text-muted-foreground">Records Extracted</label>
             <p>{jobStatus.totalExtracted}</p>
           </div>
         </CardContent>
@@ -216,7 +214,7 @@ export function EHRTests() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Còn hạn</p>
+                <p className="text-muted-foreground">Valid</p>
                 <h2>{validCount}</h2>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -227,7 +225,7 @@ export function EHRTests() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Sắp hết hạn</p>
+                <p className="text-muted-foreground">Expiring Soon</p>
                 <h2>{expiringCount}</h2>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -238,7 +236,7 @@ export function EHRTests() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground">Hết hạn</p>
+                <p className="text-muted-foreground">Expired</p>
                 <h2>{expiredCount}</h2>
               </div>
               <AlertTriangle className="h-8 w-8 text-destructive" />
@@ -254,25 +252,25 @@ export function EHRTests() {
             variant={validityFilter === "all" ? "default" : "outline"}
             onClick={() => setValidityFilter("all")}
           >
-            Tất cả
+            All
           </Button>
           <Button
             variant={validityFilter === "valid" ? "default" : "outline"}
             onClick={() => setValidityFilter("valid")}
           >
-            Còn hạn
+            Valid
           </Button>
           <Button
             variant={validityFilter === "expiring_soon" ? "default" : "outline"}
             onClick={() => setValidityFilter("expiring_soon")}
           >
-            Sắp hết hạn
+            Expiring Soon
           </Button>
           <Button
             variant={validityFilter === "expired" ? "default" : "outline"}
             onClick={() => setValidityFilter("expired")}
           >
-            Hết hạn
+            Expired
           </Button>
         </div>
         <div className="flex gap-2">
@@ -295,7 +293,7 @@ export function EHRTests() {
       <DataTable
         data={filteredTests}
         columns={columns}
-        emptyMessage="Không có kết quả xét nghiệm"
+        emptyMessage="No test results"
       />
     </div>
   );

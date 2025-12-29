@@ -118,13 +118,13 @@ export function Reports() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-muted-foreground">Tổng số mẹ đăng ký</p>
+            <p className="text-muted-foreground">Total Registered Mothers</p>
             <h2>{registeredDonors}</h2>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-muted-foreground">Donor chính thức</p>
+            <p className="text-muted-foreground">Official Donors</p>
             <h2>{approvedDonors}</h2>
           </CardContent>
         </Card>
