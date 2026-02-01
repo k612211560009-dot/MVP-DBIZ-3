@@ -1,0 +1,60 @@
+# Render.com Configuration
+# Tự động deploy Frontend + Backend + Database
+
+services:
+  # Backend API Service
+  - type: web
+    name: milkbank-backend
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+    healthCheckPath: /api/health
+
+  # Frontend Static Site
+  - type: web
+    name: milkbank-frontend
+    runtime: static
+    region: singapore
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_BACKEND_URL
+        fromService:
+          type: web
+          name: milkbank-backend
+          property: host
+
+databases:
+  # MySQL Database
+  - name: milkbank-db
+    databaseName: milkbank_prod
+    user: milkbank_user
+    region: singapore
+    plan: free
+    ipAllowList: []
