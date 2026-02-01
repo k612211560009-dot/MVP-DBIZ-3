@@ -11,8 +11,8 @@ WORKDIR /app/frontend
 # Copy frontend package files
 COPY frontend/package*.json ./
 
-# Install dependencies (need devDependencies for build)
-RUN npm ci
+# Install ALL dependencies (including devDependencies for Vite build)
+RUN npm install
 
 # Copy frontend source
 COPY frontend/ ./
