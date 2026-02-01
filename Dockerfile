@@ -17,8 +17,12 @@ RUN npm install
 # Copy frontend source
 COPY frontend/ ./
 
-# Build frontend for production
-RUN npm run build
+# Set build environment variables
+ENV NODE_ENV=production
+ENV VITE_BACKEND_URL=/api
+
+# Build frontend for production with increased memory
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # ============================================
 # Stage 2: Backend with Static Frontend
