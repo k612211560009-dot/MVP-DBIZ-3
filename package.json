@@ -1,0 +1,22 @@
+{
+  "name": "milkbank-monorepo",
+  "version": "1.0.0",
+  "description": "Milk Bank Management System - Monorepo",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "build:backend": "cd backend && npm ci --omit=dev",
+    "build:frontend": "cd frontend && npm ci && npm run build",
+    "start": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}

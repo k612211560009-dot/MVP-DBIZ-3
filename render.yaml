@@ -8,8 +8,7 @@ services:
     runtime: node
     region: singapore
     plan: free
-    rootDir: backend
-    buildCommand: npm ci --omit=dev
+    buildCommand: npm run build:backend
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -38,9 +37,8 @@ services:
     runtime: static
     region: singapore
     plan: free
-    rootDir: frontend
-    buildCommand: npm ci && NODE_OPTIONS="--max-old-space-size=4096" npm run build
-    staticPublishPath: dist
+    buildCommand: npm run build:frontend
+    staticPublishPath: frontend/dist
     routes:
       - type: rewrite
         source: /*
