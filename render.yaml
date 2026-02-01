@@ -8,7 +8,7 @@ services:
     runtime: node
     region: singapore
     plan: free
-    buildCommand: cd backend && npm install
+    buildCommand: cd backend && npm ci --omit=dev
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
@@ -37,7 +37,7 @@ services:
     runtime: static
     region: singapore
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
+    buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: frontend/dist
     routes:
       - type: rewrite
