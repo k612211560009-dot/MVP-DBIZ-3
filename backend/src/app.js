@@ -108,6 +108,18 @@ app.get("/", (req, res) => {
 });
 
 /**
+ * Simple health check (no DB required)
+ */
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
+/**
  * 404 Handler
  */
 app.use("*", (req, res) => {
@@ -197,7 +209,14 @@ const testDatabaseConnection = async () => {
     }
   } catch (error) {
     console.error("❌ Unable to connect to the database:", error);
-    process.exit(1);
+    
+    // In production, warn but don't crash - allow health checks to work
+    if (process.env.NODE_ENV === "production") {
+      console.warn("⚠️  Server starting without database connection. Please check DB credentials.");
+      console.warn("⚠️  Required env vars: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD");
+    } else {
+      process.exit(1);
+    }
   }
 };
 

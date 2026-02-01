@@ -1,0 +1,13 @@
+# Render build ignore patterns
+node_modules/
+.git/
+.env
+.env.local
+*.log
+coverage/
+.vscode/
+.idea/
+__testing__/
+*.test.js
+*.spec.js
+jest.config.js
