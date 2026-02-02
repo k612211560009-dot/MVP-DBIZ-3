@@ -86,12 +86,16 @@ const BookAppointment = () => {
       // Convert date to ISO format for backend validation
       const isoDate = new Date(selectedDate).toISOString();
 
-      await api.post("/appointments/book", {
+      const payload = {
         date: isoDate,
         time: selectedTime,
         type: appointmentType,
-        notes,
-      });
+        ...(notes && { notes }), // Only include notes if it has value
+      };
+
+      console.log("Booking payload:", payload);
+
+      await api.post("/appointments/book", payload);
 
       setMessage("Appointment booked successfully!");
       setSelectedDate("");
@@ -104,7 +108,11 @@ const BookAppointment = () => {
       console.error("Error booking appointment:", error);
       console.error("Error response:", error.response?.data);
       console.error("Error status:", error.response?.status);
-      setMessage(error.response?.data?.message || error.response?.data?.error || "Failed to book appointment");
+      setMessage(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Failed to book appointment",
+      );
     } finally {
       setLoading(false);
     }
