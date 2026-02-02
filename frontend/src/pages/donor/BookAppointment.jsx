@@ -82,8 +82,12 @@ const BookAppointment = () => {
 
     try {
       setLoading(true);
+      
+      // Convert date to ISO format for backend validation
+      const isoDate = new Date(selectedDate).toISOString();
+      
       await api.post("/appointments/book", {
-        date: selectedDate,
+        date: isoDate,
         time: selectedTime,
         type: appointmentType,
         notes,
