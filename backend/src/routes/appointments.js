@@ -27,10 +27,11 @@ const appointmentValidation = {
   bookAppointment: Joi.object({
     date: Joi.date().iso().required(),
     time: Joi.string()
-      .pattern(
-        /^([0-1]?[0-9]|2[0-3]):[0-5][0-9] - ([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
-      )
-      .required(),
+      .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+      .required()
+      .messages({
+        'string.pattern.base': 'Time must be in format HH:MM (e.g., 10:00)'
+      }),
     type: Joi.string()
       .valid("screening", "donation", "medical_test", "consultation")
       .default("donation"),
