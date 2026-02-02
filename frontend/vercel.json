@@ -7,12 +7,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://mvp-dbiz-3.onrender.com/api/:path*"
-    }
-  ],
-  "routes": [
+    },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/:path((?!.*\\.).*)",
+      "destination": "/index.html"
     }
   ]
 }
