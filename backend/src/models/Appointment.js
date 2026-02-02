@@ -55,8 +55,9 @@ module.exports = (sequelize) => {
         defaultValue: "scheduled",
       },
       priority_level: {
-        type: DataTypes.ENUM("low", "normal", "high", "urgent"),
-        defaultValue: "normal",
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+        comment: "1=low, 2=normal, 3=high, 4=urgent",
       },
       notes: {
         type: DataTypes.TEXT,
