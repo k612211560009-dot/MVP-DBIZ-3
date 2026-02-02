@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/auth/:path*",
+      "destination": "https://mvp-dbiz-3.onrender.com/api/auth/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://mvp-dbiz-3.onrender.com/api/:path*"
     },
