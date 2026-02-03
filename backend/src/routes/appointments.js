@@ -25,12 +25,21 @@ const appointmentValidation = {
   }),
 
   bookAppointment: Joi.object({
-    date: Joi.date().iso().required(),
+    date: Joi.alternatives()
+      .try(
+        Joi.date().iso(),
+        Joi.string().isoDate()
+      )
+      .required()
+      .messages({
+        "alternatives.match": "Date must be a valid ISO date (YYYY-MM-DD or ISO 8601 format)",
+        "any.required": "Date is required",
+      }),
     time: Joi.string()
       .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
       .required()
       .messages({
-        'string.pattern.base': 'Time must be in format HH:MM (e.g., 10:00)'
+        "string.pattern.base": "Time must be in format HH:MM (e.g., 10:00)",
       }),
     type: Joi.string()
       .valid("screening", "donation", "medical_test", "consultation")
@@ -54,7 +63,7 @@ const appointmentValidation = {
         "in_progress",
         "completed",
         "cancelled",
-        "no_show"
+        "no_show",
       )
       .optional(),
     priority_level: Joi.string()
@@ -72,7 +81,7 @@ const appointmentValidation = {
         "in_progress",
         "completed",
         "cancelled",
-        "no_show"
+        "no_show",
       )
       .required(),
     reason: Joi.string().max(500).optional(),
@@ -103,7 +112,7 @@ router.get(
   authenticate,
   authorize("staff", "admin", "nurse", "coordinator", "donor"),
   validationMiddleware.validatePagination,
-  AppointmentController.getAppointments
+  AppointmentController.getAppointments,
 );
 
 // @route   GET /api/appointments/available-slots
@@ -115,9 +124,9 @@ router.get(
   authorize("donor", "staff", "admin", "nurse", "coordinator"),
   validationMiddleware.validateCustom(
     appointmentValidation.availableSlots,
-    "query"
+    "query",
   ),
-  AppointmentController.getAvailableSlots
+  AppointmentController.getAvailableSlots,
 );
 
 // @route   GET /api/appointments/upcoming
@@ -133,7 +142,7 @@ router.get(
     }
     next();
   },
-  AppointmentController.getUpcomingAppointments
+  AppointmentController.getUpcomingAppointments,
 );
 
 // @route   GET /api/appointments/:id
@@ -151,7 +160,7 @@ router.get(
     }
     next();
   },
-  AppointmentController.getAppointmentById
+  AppointmentController.getAppointmentById,
 );
 
 // @route   POST /api/appointments
@@ -162,7 +171,7 @@ router.post(
   authenticate,
   authorize("staff", "admin", "nurse", "coordinator"),
   validationMiddleware.validateCustom(appointmentValidation.createAppointment),
-  AppointmentController.createAppointment
+  AppointmentController.createAppointment,
 );
 
 // @route   POST /api/appointments/book
@@ -173,7 +182,7 @@ router.post(
   authenticate,
   authorize("donor"),
   validationMiddleware.validateCustom(appointmentValidation.bookAppointment),
-  AppointmentController.bookAppointment
+  AppointmentController.bookAppointment,
 );
 
 // @route   PUT /api/appointments/:id
@@ -185,7 +194,7 @@ router.put(
   authorize("staff", "admin", "nurse", "coordinator"),
   validationMiddleware.validateUUID("id"),
   validationMiddleware.validateCustom(appointmentValidation.updateAppointment),
-  AppointmentController.updateAppointment
+  AppointmentController.updateAppointment,
 );
 
 // @route   PATCH /api/appointments/:id/status
@@ -197,7 +206,7 @@ router.patch(
   authorize("staff", "admin", "nurse", "coordinator"),
   validationMiddleware.validateUUID("id"),
   validationMiddleware.validateCustom(appointmentValidation.updateStatus),
-  AppointmentController.updateAppointmentStatus
+  AppointmentController.updateAppointmentStatus,
 );
 
 // @route   DELETE /api/appointments/:id
@@ -209,7 +218,7 @@ router.delete(
   authorize("staff", "admin", "coordinator"),
   validationMiddleware.validateUUID("id"),
   validationMiddleware.validateCustom(appointmentValidation.cancelAppointment),
-  AppointmentController.cancelAppointment
+  AppointmentController.cancelAppointment,
 );
 
 module.exports = router;

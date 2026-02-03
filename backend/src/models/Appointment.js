@@ -31,7 +31,7 @@ module.exports = (sequelize) => {
           "screening",
           "donation",
           "medical_test",
-          "consultation"
+          "consultation",
         ),
         allowNull: false,
       },
@@ -50,7 +50,7 @@ module.exports = (sequelize) => {
           "in_progress",
           "completed",
           "cancelled",
-          "no_show"
+          "no_show",
         ),
         defaultValue: "scheduled",
       },
@@ -115,7 +115,7 @@ module.exports = (sequelize) => {
           fields: ["appointment_type"],
         },
       ],
-    }
+    },
   );
 
   Appointment.associate = (models) => {

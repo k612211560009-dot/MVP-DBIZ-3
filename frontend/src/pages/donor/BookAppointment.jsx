@@ -83,12 +83,18 @@ const BookAppointment = () => {
     try {
       setLoading(true);
 
-      // Convert date to ISO format for backend validation
-      const isoDate = new Date(selectedDate).toISOString();
+      // Send date in simple YYYY-MM-DD format (what the input gives us)
+      // No timezone conversion needed - let backend handle it
+      const dateValue = selectedDate; // Already in YYYY-MM-DD format from input type="date"
+
+      // Extract start time from range format "08:00 - 09:00" -> "08:00"
+      const timeValue = selectedTime.includes(" - ")
+        ? selectedTime.split(" - ")[0]
+        : selectedTime;
 
       const payload = {
-        date: isoDate,
-        time: selectedTime,
+        date: dateValue,
+        time: timeValue,
         type: appointmentType,
         ...(notes && { notes }), // Only include notes if it has value
       };
@@ -108,6 +114,15 @@ const BookAppointment = () => {
       console.error("Error booking appointment:", error);
       console.error("Error response:", error.response?.data);
       console.error("Error status:", error.response?.status);
+
+      // Log validation details if available
+      if (error.response?.data?.details) {
+        console.error(
+          "Validation details:",
+          JSON.stringify(error.response.data.details, null, 2),
+        );
+      }
+
       setMessage(
         error.response?.data?.message ||
           error.response?.data?.error ||
