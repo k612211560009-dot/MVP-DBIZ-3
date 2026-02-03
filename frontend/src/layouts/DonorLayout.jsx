@@ -2,7 +2,6 @@ import React from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Heart, User, Calendar, History, LogOut, Menu, X } from "lucide-react";
-import DifyChatbot from "../components/DifyChatbot";
 
 const DonorLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -25,8 +24,6 @@ const DonorLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Dify AI Chatbot */}
-      <DifyChatbot />
 
       {/* Mobile sidebar */}
       <div
